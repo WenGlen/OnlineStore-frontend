@@ -1,177 +1,165 @@
-import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import axios from 'axios';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import Header from '../components/Header';
+
+
 import Button from '../components/Button';
-import Footer from '../components/Footer';
 
-const ProductDetailPage = () => {
+const { VITE_API_URL , VITE_API_PATH } = import.meta.env;
+
+import CareTipsSection from '../components/sections/CareTipsSection';
+
+
+
+
+export default function ProductDetailPage() {
+  const params = useParams();
+  const [product, setProduct] = useState({});
+  const [images, setImages] = useState([]);
+
+  async function getProduct() {
+      try {            
+          const res = await axios.get (`${VITE_API_URL}/api/${VITE_API_PATH}/product/${params.id}`);
+
+          if (res.data.product) {
+              setProduct(res.data.product);
+              setImages([res.data.product.imageUrl, ...res.data.product.imagesUrl]);
+          } else {
+              setProduct({});
+          }
+      } catch (error) {
+          setProduct({}); 
+      }
+  }
+  
+
+  useEffect(() => {
+    getProduct();
+  }, []);
+
+
+/*
+{
+  "success": true,
+  "product": {
+    "category": "衣服3",
+    "content": "這是內容",
+    "description": "Sit down please 名設計師設計",
+    "id": "-L9tH8jxVb2Ka_DYPwng",
+    "imageUrl": "主圖網址",
+    "imagesUrl": [
+      "圖片網址一",
+      "圖片網址二",
+      "圖片網址三",
+      "圖片網址四",
+      "圖片網址五"
+    ],
+    "is_enabled": 1,
+    "num": 1,
+    "origin_price": 100,
+    "price": 600,
+    "title": "[賣]動物園造型衣服3",
+    "unit": "個"
+  }
+}
+*/
+
+
+
+
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedImage, setSelectedImage] = useState(1);
 
-  const product = {
-    id: 1,
-    name: 'Platycerium Ridleyi',
-    subtitle: 'Rare Staghorn Fern',
-    price: 125.00,
-    status: 'IN STOCK',
-    shipsFrom: 'SHIPS FROM FLORIDA',
-    description: 'A stunning epiphytic fern known for its unique shield fronds that resemble the texture of a cabbage or brain coral. This specimen is a centerpiece for any indoor jungle, thriving when mounted on organic substrates. Known for its distinct "crown" shape and upright fertile fronds.',
-    care: {
-      light: { icon: '☀️', label: 'Light', value: 'Bright Indirect' },
-      water: { icon: '💧', label: 'Water', value: 'Weekly Soak' },
-      humidity: { icon: '💦', label: 'Humidity', value: '60% - 80%' }
-    },
-    images: [null, null, null, null]
-  };
 
-  // 推薦商品 - Complete the Look
-  const relatedProducts = [
-    { id: 1, name: 'Premium Cedar Board', price: 32.00, image: null },
-    { id: 2, name: 'Virgin Cork Slab', price: 18.00, image: null },
-    { id: 3, name: 'Modern Acrylic Hexagon', price: 45.00, image: null },
-    { id: 4, name: 'Vintage Teak Plaque', price: 38.00, image: null }
-  ];
+
+
 
   return (
-    <div className="product-detail-page">
-      <Header />
-
-      {/* Breadcrumb */}
-      <div className="detail-breadcrumb">
-        <div className="detail-breadcrumb__container">
-          <Link to="/">Home</Link>
-          <span>/</span>
-          <Link to="/products">Epiphytic Ferns</Link>
-          <span>/</span>
-          <span className="detail-breadcrumb__current">Platycerium Ridleyi</span>
-        </div>
-      </div>
+    <div className="md:px-8">
 
       {/* Product Section */}
-      <section className="detail-product">
-        <div className="detail-product__container">
-          {/* Left: Images */}
-          <div className="detail-product__gallery">
-            {/* Thumbnails */}
-            <div className="detail-product__thumbnails">
-              {product.images.map((img, index) => (
-                <button
-                  key={index}
-                  className={`detail-product__thumbnail ${selectedImage === index ? 'detail-product__thumbnail--active' : ''}`}
-                  onClick={() => setSelectedImage(index)}
-                >
-                  <div className="detail-product__thumbnail-placeholder">
-                    <span>🌿</span>
-                  </div>
+      <section className="pb-8 md:pt-8">
+
+        {/*產品圖片*/}
+        <div className="w-full max-h-[600px] flex flex-col gap-4
+                        md:flex-row-reverse ">
+
+          <div className="w-full  bg-placeholder rounded-md overflow-hidden">
+            <img src={images[selectedImage]} alt={`Product Image ${selectedImage + 1}`} 
+                 className="w-full h-full object-cover" />
+          </div>
+          
+          <div className="flex justify-between gap-2 
+                          md:flex-col md:w-1/4">
+              {images.map((img, index) => (
+                <button onClick={() => setSelectedImage(index)}
+                        className={`w-1/4 aspect-[4/3] rounded-md overflow-hidden bg-placeholder hover:opacity-75 
+                                    md:w-full 
+                                    ${selectedImage === index ? 'opacity-100' : 'opacity-50'}`}>
+                  <img src={img} alt={`Product Image ${index + 1}`} 
+                       className="w-full h-full object-cover" />
                 </button>
               ))}
-            </div>
-
-            {/* Main Image */}
-            <div className="detail-product__main-image">
-              <div className="detail-product__image-placeholder">
-                <span>🌿</span>
-                <p>Product Image</p>
-              </div>
-            </div>
           </div>
 
-          {/* Right: Info */}
-          <div className="detail-product__info">
-            <div className="detail-product__header">
-              <h1 className="detail-product__title">{product.name}</h1>
-              <button className="detail-product__favorite">
-                <span>💚</span>
-              </button>
+        </div>
+      </section>
+
+      <section className="w-full bg-panel-50 p-8 rounded-md flex flex-col justify-between md:flex-row  gap-4">
+        <div className="">
+          <h1 className="text-xl md:text-2xl tracking-normal"> {product.title} </h1>
+          <div className="space-y-4 hidden md:block">
+            <p className="text-secondary">{product.sub_title} </p>
+            <div className="w-fit bg-panel rounded-md px-4 py-1 text-xs font-bold">
+              {product.category}
             </div>
+          </div>
+        </div>
 
-            <p className="detail-product__subtitle">
-              {product.subtitle} • <span className="detail-product__price">${product.price.toFixed(2)}</span>
-            </p>
-
-            {/* Status Tags */}
-            <div className="detail-product__tags">
-              <span className="detail-product__tag detail-product__tag--stock">
-                {product.status}
-              </span>
-              <span className="detail-product__tag detail-product__tag--shipping">
-                {product.shipsFrom}
-              </span>
-            </div>
-
-            {/* Description */}
-            <p className="detail-product__description">
-              {product.description}
-            </p>
-
-            {/* Care Info */}
-            <div className="detail-product__care">
-              {Object.values(product.care).map((item, index) => (
-                <div key={index} className="detail-product__care-item">
-                  <span className="detail-product__care-icon">{item.icon}</span>
-                  <div>
-                    <p className="detail-product__care-label">{item.label}</p>
-                    <p className="detail-product__care-value">{item.value}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Quantity & Add to Cart */}
-            <div className="detail-product__actions">
-              <div className="detail-product__quantity">
-                <button
-                  className="detail-product__quantity-btn"
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                >
-                  −
-                </button>
-                <span className="detail-product__quantity-value">{quantity}</span>
-                <button
-                  className="detail-product__quantity-btn"
-                  onClick={() => setQuantity(quantity + 1)}
-                >
-                  +
-                </button>
+        <div className="min-w-[220px] flex flex-col gap-4">
+          <div className="flex-row-between gap-2 ">
+            <div className="h-full space-y-4 ">
+              <p className="text-secondary block md:hidden">{product.sub_title} </p>
+              <div className="bg-panel rounded-md px-3 py-1 text-xs font-bold block md:hidden">
+                {product.category}
               </div>
-              <Button variant="primary" size="lg" className="detail-product__cart-btn">
-                🛒 Add to Cart
-              </Button>
             </div>
+            <div className="flex flex-col gap-2 text-right">
+              <p className="text-sm md:text-base line-through">$ {product.origin_price}</p>
+              <p className="text-xl font-bold text-primary">$ {product.price}</p>
+            </div>
+          </div>
+          <div className="flex-row--center justify-between md:justify-end gap-4">
+            {product.category==="精品" ? (
+              <p className="font-bold">唯一個體</p>
+            ):(
+              <div className="bg-background rounded-md flex-row-between-center gap-2 overflow-hidden">
+                <button className="btn-switch" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
+                <span className="w-6 text-center">{quantity}</span>
+                <button className="btn-switch" onClick={() => setQuantity(quantity + 1)}>+</button>
+              </div>
+            )}
+            <button className="btn bg-secondary text-white">加入購物車</button>
           </div>
         </div>
       </section>
 
-      {/* Complete the Look Section */}
-      <section className="detail-related">
-        <div className="detail-related__container">
-          <div className="detail-related__header">
-            <div>
-              <h2 className="detail-related__title">Complete the Look</h2>
-              <p className="detail-related__subtitle">Suggested mounting boards for your Ridleyi</p>
-            </div>
-            <a href="#" className="detail-related__link">View all mounts →</a>
+      <section>
+        <div className="max-w-screen-md mx-auto flex flex-col gap-8 py-12">
+          <div className="">
+          {product.description}
           </div>
+          <CareTipsSection title="Care Tips" care={product.care} />
 
-          <div className="detail-related__grid">
-            {relatedProducts.map(item => (
-              <div key={item.id} className="detail-related__item">
-                <div className="detail-related__image">
-                  <div className="detail-related__image-placeholder">
-                    <span>🪵</span>
-                  </div>
-                </div>
-                <h3 className="detail-related__item-name">{item.name}</h3>
-                <p className="detail-related__item-price">${item.price.toFixed(2)}</p>
-              </div>
-            ))}
-          </div>
         </div>
+
+
+
+
       </section>
 
-      <Footer />
     </div>
   );
 };
 
-export default ProductDetailPage;

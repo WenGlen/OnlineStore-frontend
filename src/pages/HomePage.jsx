@@ -1,177 +1,127 @@
 import React from 'react';
-import Header from '../components/Header';
-import Button from '../components/Button';
-import ProductCard from '../components/ProductCard';
-import Footer from '../components/Footer';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+
+import Hero from '../components/sections/Home/Hero';
+import Features from '../components/sections/Home/Features';
+
+import ProductCard from '../components/elements/ProductCard';
+
+import axios from 'axios';
+const { VITE_API_URL , VITE_API_PATH } = import.meta.env;
 
 
-const HomePage = () => {
-  // 特色物種數據
-  const featuredSpecies = [
-    {
-      id: 1,
-      name: 'Platycerium Ridleyi',
-      subtitle: 'RIDLEY\'S STAGHORN',
-      price: 89,
-      image: null,
-      badge: '$89'
-    },
-    {
-      id: 2,
-      name: 'Platycerium Grande',
-      subtitle: 'REGAL ELKHORN FERN',
-      price: 145,
-      image: null,
-      badge: '$145'
-    },
-    {
-      id: 3,
-      name: 'Platycerium Superbum',
-      subtitle: 'STAGHORN FERN',
-      price: 95,
-      image: null,
-      badge: '$95'
-    },
-    {
-      id: 4,
-      name: 'Platycerium Coronarium',
-      subtitle: 'CROWN STAGHORN',
-      price: 210,
-      image: null,
-      badge: '$210'
+
+export default function HomePage() {
+  const [products, setProducts] = useState([]);
+
+  async function getProducts() {
+    try {            
+        const res = await axios.get (`${VITE_API_URL}/api/${VITE_API_PATH}/products/all`);
+
+        if (res.data.products.length) {
+            const  resProducts  = Object.values(res.data.products).filter((product) => product.category === "精品");
+            setProducts(resProducts);
+        } else {
+            setProducts([]);
+        }
+    } catch (error) {
+        setProducts([]); 
     }
-  ];
+  }
+
+  useEffect(() => {
+    getProducts();
+  }, []);
+
+  // 取得價位前四高的商品
+  const topFourProducts = React.useMemo(() => {
+    return [...products]
+      .sort((a, b) => (b.price || 0) - (a.price || 0))
+      .slice(0, 4);
+  }, [products]);
+
+
+
 
   return (
-    <div className="home-page">
-      <Header />
+    <>
 
-      {/* Hero Section */}
-      <section className="hero">
-        <div className="hero__container">
-          {/* Left Image */}
-          <div className="hero__image">
-            <div className="hero__image-placeholder">
-              <span>🌿</span>
-              <p>Hero Plant Image</p>
-            </div>
-          </div>
+      {/* 首頁英雄區 */}
+      <Hero />
 
-          {/* Right Content */}
-          <div className="hero__content">
-            <span className="hero__label">CURATED COLLECTION 2024</span>
-            <h1 className="hero__title">
-              Living Art for<br />
-              <span className="hero__title--accent">Modern Spaces</span>
-            </h1>
-            <p className="hero__description">
-              Transform your walls into a vertical garden with our
-              rare, hand-mounted Staghorn ferns. Sustainably
-              grown and meticulously curated.
-            </p>
-            <div className="hero__buttons">
-              <Button variant="primary" size="lg">
-                Explore New Arrivals
-              </Button>
-              <Button variant="outline" size="lg">
-                View Lookbook
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <div className="w-full h-12"/>
 
-      {/* Featured Section */}
-      <section className="featured">
-        <div className="featured__container">
-          <div className="featured__header">
+      {/* 精選商品區 */}
+      <section className="w-full bg-panel-50 py-20">
+        <div className="max-w-[1280px] mx-auto px-6">
+          <div className="flex-row-between-end mb-10">
             <div>
-              <h2 className="featured__title">Featured Species</h2>
-              <p className="featured__subtitle">Our curated selection of healthy, vibrant ferns</p>
+              <h2 className="">優質精品</h2>
+              <p className="text-sm text-gray-600">我們精心挑選的健康、充滿活力的蕨類貴族</p>
             </div>
-            <a href="#" className="featured__link">
-              View All →
+            <a href="#" className="text-sm">
+              查看全部 →
             </a>
           </div>
 
-          <div className="featured__grid">
-            {featuredSpecies.map((product) => (
-              <ProductCard key={product.id} {...product} />
+          <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
+            {topFourProducts.map((product) => (
+              <ProductCard key={product.id} {...product} page="home" />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Greenhouse Section */}
-      <section className="greenhouse">
-        <div className="greenhouse__container">
-          <div className="greenhouse__content">
-            <h2 className="greenhouse__title">
-              Grown with<br />
-              Intention at<br />
-              <span className="greenhouse__title--accent">Our Greenhouse</span>
-            </h2>
-            <p className="greenhouse__description">
-              Our journey began with a single Ridleyi. Today, we
-              manage a sustainable ecosystem dedicated to the
-              preservation and cultivation of exotic staghorn ferns.
-              Every plant is more than just merchandise—it's a living
-              sculpture nurtured for years before reaching your
-              home.
-            </p>
-            <Button variant="dark" size="md">
-              Our Sustainable Process →
-            </Button>
-          </div>
-          <div className="greenhouse__images">
-            <div className="greenhouse__image greenhouse__image--main">
-              <span>🌿</span>
-              <p>Greenhouse Image</p>
+
+      <div className="w-full h-12"/>
+      
+
+      {/* 介紹區 */}
+      <section className="w-full py-20">
+          <div className="flex flex-col items-center md:flex-row gap-12 px-12">
+            {/* Content */}
+            <div className="max-w-[440px]">
+              <h2 className="font-normal mb-6 font-serif">
+                用心栽培於我們的
+                <span className="text-primary italic">蕨</span>
+              </h2>
+              <p className="text-[15px] leading-[1.8] text-gray-600 mb-8">
+                我們的旅程始於一株平凡的銀鹿。<br/>
+                如今，我們管理著一個致力於提供各式高品質鹿角蕨的綠植園。<br/>
+                每一株植物不僅僅是商品——它是經過多年培育的活雕塑，才來到您的家中。
+              </p>
+              <button className="px-6 py-3 bg-[#2d5016] hover:bg-[#1f350f] text-white font-medium rounded-lg transition-colors duration-200">
+                我們的永續流程 →
+              </button>
             </div>
-            <div className="greenhouse__image greenhouse__image--secondary">
-              <span>👨‍🌾</span>
-              <p>Gardener Image</p>
+            
+            {/* Images */}
+            <div className="relative w-full aspect-[4/3]
+                               min-h-[320px]
+                            sm:min-h-[320px]">
+              <div className="absolute left-0 top-0 
+                              w-[70%]  aspect-[4/3] overflow-hidden flex-col-center-center
+                              rounded-xl  bg-placeholder 
+                                 min-w-[200px] 
+                              sm:min-w-[320px]">
+                <p >溫室圖片</p>
+              </div>
+              <div className="absolute right-0 bottom-0
+                              w-[40%]  aspect-[3/4] overflow-hidden flex-col-center-center
+                              rounded-xl  bg-panel 
+                                 min-w-[160px]
+                              sm:min-w-[200px]">
+                <p >老闆圖片</p>
+              </div>
             </div>
           </div>
-        </div>
+
       </section>
 
-      {/* Features Section */}
-      <section className="features">
-        <div className="features__container">
-          <div className="features__item">
-            <div className="features__icon">🌱</div>
-            <h3 className="features__title">Organic Methods</h3>
-            <p className="features__description">
-              No harsh chemicals. We use beneficial
-              insects and organic fertilizers to ensure the
-              healthiest ferns possible.
-            </p>
-          </div>
-          <div className="features__item">
-            <div className="features__icon">📚</div>
-            <h3 className="features__title">Custom Mounting</h3>
-            <p className="features__description">
-              Each mounting board is hand-crafted from
-              reclaimed teak or cedar, ensuring a natural
-              and eco-friendly base.
-            </p>
-          </div>
-          <div className="features__item">
-            <div className="features__icon">📦</div>
-            <h3 className="features__title">Stress-Free Shipping</h3>
-            <p className="features__description">
-              Our customized crates maintain the perfect humidity
-              levels to deliver healthy ferns, guaranteed across
-              the globe, year-round.
-            </p>
-          </div>
-        </div>
-      </section>
+      <Features />
 
-      <Footer />
-    </div>
+
+    </>
   );
 };
-
-export default HomePage;

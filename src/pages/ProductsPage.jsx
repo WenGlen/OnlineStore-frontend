@@ -1,13 +1,55 @@
-import React, { useState } from 'react';
-import Header from '../components/Header';
-import ProductCardList from '../components/ProductCardList';
-import Pagination from '../components/Pagination';
-import Footer from '../components/Footer';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
-const ProductsPage = () => {
+import axios from 'axios';
+const { VITE_API_URL , VITE_API_PATH } = import.meta.env;
+
+import ProductCard from '../components/elements/ProductCard';
+import Pagination from '../components/Pagination';
+
+
+export default function ProductsPage() {
+
+
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  async function getProducts() {
+      try {            
+          const res = await axios.get (`${VITE_API_URL}/api/${VITE_API_PATH}/products/all`);
+          //console.log("res:",res);
+          if (res.data.products.length) {
+              const  resProducts  = Object.values(res.data.products);
+              //console.log("resProducts:",resProducts);
+              const resCategories = [...new Set(resProducts.map((product) => product.category))];
+              //console.log("resCategories:",resCategories);
+              setCategories(resCategories);
+
+              // 對產品進行排序：先按分類排序，再按標題排序
+              //const sortedProducts = sortProductsByCategoryAndTitle(resProducts);
+              setProducts(resProducts);
+          } else {
+
+              setProducts([]);
+          }
+      } catch (error) {
+          setProducts([]); 
+      }
+  }
+  
+
+  useEffect(() => {
+    getProducts();
+  }, []);
+
   const [activeCategory, setActiveCategory] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState('popularity');
+
+  useEffect(() => {
+    setActiveCategory( categories[0] );
+  }, [categories]);
+
 
   // 篩選狀態
   const [filters, setFilters] = useState({
@@ -16,12 +58,6 @@ const ProductsPage = () => {
     difficulty: []
   });
 
-  const categories = [
-    { id: 'all', label: 'All Species' },
-    { id: 'rare', label: 'Rare Finds' },
-    { id: 'beginner', label: 'Beginner Friendly' },
-    { id: 'new', label: 'New Arrivals' }
-  ];
 
   const filterOptions = {
     speciesType: [
@@ -41,57 +77,7 @@ const ProductsPage = () => {
     ]
   };
 
-  // 產品列表
-  const products = [
-    {
-      id: 1,
-      name: 'Platycerium Ridleyi',
-      subtitle: "Collector's Edition",
-      price: 145.00,
-      image: null,
-      tag: 'RARE'
-    },
-    {
-      id: 2,
-      name: 'P. Bifurcatum',
-      subtitle: '"Netherlands"',
-      price: 48.00,
-      image: null,
-      tagColor: 'green',
-      tagText: 'Beginner Friendly'
-    },
-    {
-      id: 3,
-      name: 'Platycerium Grande',
-      subtitle: 'Large Specimen',
-      price: 210.00,
-      image: null
-    },
-    {
-      id: 4,
-      name: 'P. Coronarium',
-      subtitle: 'Pendulous Fronds',
-      price: 85.00,
-      image: null,
-      tag: 'NEW'
-    },
-    {
-      id: 5,
-      name: 'P. Superbum',
-      subtitle: 'Easy Maintenance',
-      price: 62.00,
-      image: null
-    },
-    {
-      id: 6,
-      name: "P. Alcicorne 'African'",
-      subtitle: 'Compact Variety',
-      price: 55.00,
-      image: null
-    }
-  ];
 
-  const totalResults = 12;
   const totalPages = 3;
 
   const handleFilterChange = (category, value) => {
@@ -103,168 +89,82 @@ const ProductsPage = () => {
     }));
   };
 
-  const clearFilters = () => {
-    setFilters({
-      speciesType: [],
-      lightLevel: [],
-      difficulty: []
-    });
-  };
+
 
   return (
-    <div className="collection-page">
-      <Header />
 
-      {/* Breadcrumb */}
-      <div className="collection-breadcrumb">
-        <div className="collection-breadcrumb__container">
-          <a href="#">Home</a>
-          <span>/</span>
-          <a href="#">Shop</a>
-          <span>/</span>
-          <span className="collection-breadcrumb__current">Platycerium</span>
+    <div className="px-8">  
+
+    {/* Banner */}
+    <section className="banner
+                        py-12 flex-col gap-8 border-b border-border-50">
+        <div>
+          <h1>挑選你的<span className="text-primary"> 綠蕨飾</span></h1>
+          <p>探索我們精心挑選的鹿角蕨系列</p>
+          <p>從經典品種到珍稀標本級植株應有盡有</p>
+          <p>切換分類按鈕尋找你心儀的植物</p>
         </div>
-      </div>
 
-      {/* Hero */}
-      <section className="collection-hero">
-        <div className="collection-hero__container">
-          <h1 className="collection-hero__title">The Platycerium Collection</h1>
-          <p className="collection-hero__description">
-            Discover our curated selection of epiphytic ferns. From the majestic Grande
-            to the delicate Ridleyi, find the perfect architectural plant for your space.
-          </p>
+        <div /*tabs-container*/ className="flex-row gap-4">
+          {categories.map((category) => (
+            <button
+              key={category}
+              className={`tab-btn ${activeCategory === category ? 'active' : ''}`}
+              onClick={() => setActiveCategory(category)}
+            >
+              {category}
+            </button>
+          ))}
+            <div className="text-sm text-gray-500">
+              （tabs篩選功能還沒做）
+            </div>
+        </div>
 
-          {/* Category Tabs */}
-          <div className="collection-hero__tabs">
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                className={`collection-hero__tab ${activeCategory === cat.id ? 'collection-hero__tab--active' : ''}`}
-                onClick={() => setActiveCategory(cat.id)}
-              >
-                {cat.label}
-              </button>
+    </section>
+    
+
+
+    <div>
+      <section>
+        <div className="flex-row-between-center mt-12 py-4">
+          <span className="">
+            此分類 {products.length} 項商品
+          </span>
+          <div className="collection-products__sort">
+            <span>排序方式（功能還沒做）：</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="collection-products__select"
+            >
+              <option value="popularity">熱門度</option>
+              <option value="price-low">價格：低到高</option>
+              <option value="price-high">價格：高到低</option>
+              <option value="newest">最新上架</option>
+            </select>
+          </div>
+        </div>
+      </section>
+      
+      <section>
+          <div /*product-card-grid*/ className="grid gap-12
+                                                grid-cols-1 
+                                                sm:grid-cols-2 
+                                                md:grid-cols-3 ">
+            {products.map((product) => (
+                <Link key={product.id} to={`/product/${product.id}`} className="link-card">
+                  <ProductCard {...product} page="products" />
+                </Link>
             ))}
           </div>
-        </div>
       </section>
 
-      {/* Main Content */}
-      <section className="collection-content">
-        <div className="collection-content__container">
-          {/* Sidebar Filters */}
-          <aside className="collection-filters">
-            <div className="collection-filters__header">
-              <h3 className="collection-filters__title">Filters</h3>
-              <button className="collection-filters__clear" onClick={clearFilters}>
-                CLEAR ALL
-              </button>
-            </div>
+      <div className="h-12"/>
 
-            {/* Species Type */}
-            <div className="collection-filters__group">
-              <h4 className="collection-filters__group-title">
-                <span>▼</span> SPECIES TYPE
-              </h4>
-              <div className="collection-filters__options">
-                {filterOptions.speciesType.map(option => (
-                  <label key={option.id} className="collection-filters__option">
-                    <input
-                      type="checkbox"
-                      checked={filters.speciesType.includes(option.id)}
-                      onChange={() => handleFilterChange('speciesType', option.id)}
-                    />
-                    <span className="collection-filters__checkbox"></span>
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </div>
+    </div>
 
-            {/* Light Level */}
-            <div className="collection-filters__group">
-              <h4 className="collection-filters__group-title">
-                <span>▼</span> LIGHT LEVEL
-              </h4>
-              <div className="collection-filters__options">
-                {filterOptions.lightLevel.map(option => (
-                  <label key={option.id} className="collection-filters__option">
-                    <input
-                      type="checkbox"
-                      checked={filters.lightLevel.includes(option.id)}
-                      onChange={() => handleFilterChange('lightLevel', option.id)}
-                    />
-                    <span className="collection-filters__checkbox"></span>
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </div>
 
-            {/* Difficulty */}
-            <div className="collection-filters__group">
-              <h4 className="collection-filters__group-title">
-                <span>▼</span> DIFFICULTY
-              </h4>
-              <div className="collection-filters__options">
-                {filterOptions.difficulty.map(option => (
-                  <label key={option.id} className="collection-filters__option">
-                    <input
-                      type="checkbox"
-                      checked={filters.difficulty.includes(option.id)}
-                      onChange={() => handleFilterChange('difficulty', option.id)}
-                    />
-                    <span className="collection-filters__checkbox"></span>
-                    {option.label}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          {/* Products Grid */}
-          <div className="collection-products">
-            {/* Results Header */}
-            <div className="collection-products__header">
-              <span className="collection-products__count">
-                Showing {totalResults} results
-              </span>
-              <div className="collection-products__sort">
-                <span>Sort by:</span>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="collection-products__select"
-                >
-                  <option value="popularity">Popularity</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="newest">Newest</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Products Grid */}
-            <div className="collection-products__grid">
-              {products.map(product => (
-                <ProductCardList key={product.id} {...product} />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
-            />
-          </div>
-        </div>
-      </section>
-
-      <Footer />
     </div>
   );
 };
 
-export default ProductsPage;

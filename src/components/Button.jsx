@@ -13,10 +13,8 @@ const Button = ({
   const baseClasses = 'font-medium transition-all duration-200 cursor-pointer';
   
   const variantClasses = {
-    primary: 'bg-[#00DB4F] hover:bg-[#00A83D] text-white',
-    secondary: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-    outline: 'border-2 border-[#00DB4F] text-[#00DB4F] hover:bg-[#00DB4F] hover:text-white',
-    dark: 'bg-gray-900 hover:bg-gray-800 text-white'
+    primary: 'bg-primary hover:bg-primary-hover text-white',
+    secondary: 'bg-secondary hover:bg-secondary-hover text-white',
   };
 
   const sizeClasses = {
