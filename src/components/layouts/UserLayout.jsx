@@ -3,37 +3,29 @@ import { Outlet, NavLink, useLocation } from 'react-router-dom';
 export default function UserPage() {
   const location = useLocation();
   const isOrders = location.pathname.includes('/user/orders') || location.pathname === '/user';
-  const isSettings = location.pathname.includes('/user/settings');
   const isInfo = location.pathname.includes('/user/info');
   
   return (
-    <div className="user-page w-full flex gap-4">
+    <div className="w-full max-w-screen-md mx-auto flex flex-col md:flex-row gap-12">
 
-      <nav className="user-nav">
-        <div className="user-nav-container flex-col-start">
-          <NavLink 
-            to="/user/info" 
-            className={({ isActive }) => `user-nav-link ${isActive || isInfo ? 'active' : ''}`}
-          >
-            Info
-          </NavLink>
+      <nav className="w-full md:w-[150px] md:min-w-[150px] h-fit sticky md:top-24 bg-panel-50 rounded-br-lg md:rounded-md p-6 flex flex-row md:flex-col gap-4">
           <NavLink 
             to="/user/orders" 
-            className={({ isActive }) => `user-nav-link ${isActive || isOrders ? 'active' : ''}`}
+            className={({ isActive }) => `btn-link ${isActive || isOrders ? 'active' : ''}`}
           >
-            Orders
+            查看訂單
           </NavLink>
           <NavLink 
-            to="/user/settings" 
-            className={({ isActive }) => `user-nav-link ${isActive || isSettings ? 'active' : ''}`}
+            to="/user/info" 
+            className={({ isActive }) => `btn-link ${isActive || isInfo ? 'active' : ''}`}
           >
-            Settings
+            會員資料
           </NavLink>
-        </div>
+
       </nav>
 
 
-      <div className="user-content">
+      <div className="w-full mx-auto ">
         <Outlet />
       </div>
     </div>

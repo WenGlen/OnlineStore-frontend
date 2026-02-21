@@ -1,14 +1,11 @@
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-
-
-import Button from '../components/Button';
 
 const { VITE_API_URL , VITE_API_PATH } = import.meta.env;
 
-import CareTipsSection from '../components/sections/CareTipsSection';
+import CareTipsSection from '../../components/sections/products/CareTipsSection';
+import QuantityController from '../../components/elements/QuantityController';
 
 
 
@@ -39,6 +36,7 @@ export default function ProductDetailPage() {
   }, []);
 
 
+  const Q = 5;
 /*
 {
   "success": true,
@@ -131,14 +129,15 @@ export default function ProductDetailPage() {
             </div>
           </div>
           <div className="flex-row--center justify-between md:justify-end gap-4">
-            {product.category==="精品" ? (
+            {product.category === '精品' ? (
               <p className="font-bold">唯一個體</p>
-            ):(
-              <div className="bg-background rounded-md flex-row-between-center gap-2 overflow-hidden">
-                <button className="btn-switch" onClick={() => setQuantity(Math.max(1, quantity - 1))}>−</button>
-                <span className="w-6 text-center">{quantity}</span>
-                <button className="btn-switch" onClick={() => setQuantity(quantity + 1)}>+</button>
-              </div>
+            ) : (
+              <QuantityController
+                value={quantity}
+                min={1}
+                max={Q}
+                onChange={setQuantity}
+              />
             )}
             <button className="btn bg-secondary text-white">加入購物車</button>
           </div>

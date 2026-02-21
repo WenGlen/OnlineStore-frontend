@@ -1,30 +1,41 @@
 import { Outlet, Link , NavLink , useParams , useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import userIcon from '../../img/user.png';
 import cartIcon from '../../img/cart.png';
-
-
-
-import Footer from './Footer';
 
 export default function MainLayout({ 
 
     headerNavItems ,
     footerNavItems ,
 
-}) {   
-    const CartCount = 11;//TODO: get from backend
-
+}) {
     const location = useLocation();
+
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [location.pathname]);
+
+    const CartCount = 11;//TODO: get from backend
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    // 從手機版切回桌機版時關閉手機選單（Tailwind md = 768px）
+    useEffect(() => {
+        const media = window.matchMedia('(min-width: 768px)');
+        const handler = () => {
+            if (media.matches) setIsMobileMenuOpen(false);
+        };
+        media.addEventListener('change', handler);
+        return () => media.removeEventListener('change', handler);
+    }, []);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     
     return (
-        <div className="min-h-screen flex flex-col overflow-x-hidden w-full" >
+        <div className="min-h-screen flex flex-col w-full" >
 
             <header className="header" >
-                <div /*for desktop*/ className="fixed top-0 left-0 z-50
+                {/* 桌面版選單 */}
+                <div className="fixed top-0 left-0 z-50
                                                 w-full h-16 backdrop-blur-sm bg-background-50 border-b border-border-25 
                                                 hidden
                                                 md:block ">
@@ -52,40 +63,39 @@ export default function MainLayout({
                             <Link to="/order" className="btn-icon relative">
                                 <img src={cartIcon} alt="cart" className="w-8 h-8" />
                                 {CartCount > 0 && (
-                                    <div className="absolute -top-2 -right-2
+                                    <div className="absolute -top-3 -right-3
                                                     w-6 h-6 bg-primary rounded-full
                                                     text-xs text-invert flex items-center justify-center ">
                                         {CartCount}
                                     </div>
                                 )}
                             </Link>
-                            <Link to="/user/orders" className="btn-icon user">
+                            <Link to="/user/orders" className="btn-icon">
                                 <img src={userIcon} alt="user" className="w-10 h-10" />
                             </Link>
                         </div>
                     </div>
                 </div>
-                <div /*for desktop space*/ className="h-16 w-full md:block hidden" />
-
-                <div /*for mobile*/ className="fixed top-4 right-4 flex gap-6 z-50
+                <div /*排版站位元素*/ className="h-16 w-full md:block hidden" />
+                
+                {/* 手機版選單 */}
+                <div className="fixed top-4 right-4 flex gap-6 z-50
                                                 block
                                                 md:hidden">
-                    <button /*cart*/ className="btn-icon relative">
-                        <Link to="/order" className="btn-icon relative">
-                            <img src={cartIcon} alt="cart" className="w-8 h-8" />
-                            {CartCount > 0 && (
-                            <span className="absolute -top-2 -right-2
-                                            w-6 h-6 bg-primary rounded-full
-                                            text-sm text-invert flex items-center justify-center ">
-                                {CartCount}
-                            </span>
-                            )}
-                        </Link>
-                    </button>
+                    <Link to="/order" className="btn-icon relative">
+                        <img src={cartIcon} alt="cart" className="w-8 h-8" />
+                        {CartCount > 0 && (
+                        <span className="absolute -top-2 -right-2
+                                        w-6 h-6 bg-primary rounded-full
+                                        text-sm text-invert flex items-center justify-center ">
+                            {CartCount}
+                        </span>
+                        )}
+                    </Link>
 
                     <button className="btn-icon" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                         <div className="w-8 h-8 flex-col-center
-                                        bg-secondary rounded-md pb-1">
+                                        bg-muted rounded-md pb-1">
                             <span className="text-lg text-invert ">☰</span>
                         </div>
                     </button>
@@ -117,15 +127,83 @@ export default function MainLayout({
                 </div>
             </header>
             
-
-            <div className="flex-1 w-full overflow-x-hidden min-h-0" /*撐滿容器*/ >
+            {/* 主要內容 */}
+            <div className="flex-1 w-full min-h-0">
                 <main className="mx-auto w-full" >
                     <Outlet />
                 </main>
             </div>
 
 
-            <Footer headerNavItems={headerNavItems} footerNavItems={footerNavItems} />
+            <footer className="footer 
+                                w-full backdrop-blur-sm bg-background-25
+                                border-t border-border-50">
+                <div className="w-full max-w-screen-xl mx-auto 
+                                    flex-col-center-center gap-4
+                                    px-8 py-4 ">
+
+                    <div className="w-full flex flex-col justify-between items-center gap-8
+                                    md:flex-row">
+
+                    {/* EDM */}
+                    <div className="w-full flex flex-col md:flex-row items-center gap-8">
+                        <div className="w-60 h-10 bg-placeholder rounded-md flex-row-center-center">
+                        <span>Verdant Noble (logo)</span>
+                        </div>
+
+                        <form className="w-full flex-col-start gap-2">
+                        <p>訂閱綠爵飾電子報<br />專為綠蕨愛好者提供優質的植物和相關資訊。</p>
+                        <div className="w-full flex-row-start">
+                            <input
+                            type="email"
+                            placeholder="Email address"
+                            className="w-full md:w-48 p-2 border-0 rounded-none
+                                        shadow-[inset_0_-1px_0_0_var(--color-border)]
+                                        focus:shadow-[inset_0_-2px_0_0_var(--color-border)] focus:outline-none"
+                            />
+                            <button className="btn-panel rounded-l-none rounded-r-sm w-24">訂閱</button>
+                        </div>
+                        </form>
+
+                    </div>
+
+                    {/* 頁尾選單 */}
+                    <div className="flex-row-between gap-8">
+                        <div className="w-[160px] space-y-2 text-center md:text-left">
+                        <p>探索綠爵飾</p>
+                        <ul className="space-y-1">
+                            {headerNavItems.map((item, index) => (
+                            <li key={index}>
+                                <NavLink key={item.path} to={item.path} 
+                                        className={`nav-item text-NotoSerifTC`}>
+                                {item.label}
+                                </NavLink>
+                            </li>
+                            ))}
+                        </ul>
+                        </div>
+
+                        <div className="w-[160px] space-y-2 text-center md:text-left">
+                        <p>了解更多</p>
+                        <ul className="space-y-1">
+                            {footerNavItems.map((item, index) => (
+                            <li key={index}>
+                                <NavLink key={item.path} to={item.path} 
+                                        className={`nav-item text-NotoSerifTC`}>
+                                {item.label}
+                                </NavLink>
+                            </li>
+                            ))}
+                        </ul>
+                        </div>
+                    </div>
+                    </div>
+                    {/* 版權宣告 */}
+                    <div className="text-sm text-muted">
+                    <p>© 2026 Verdant Noble.<br className="block md:hidden" /> ALL RIGHTS RESERVED.</p>
+                    </div>
+                </div>
+                </footer>
 
         </div>
     )

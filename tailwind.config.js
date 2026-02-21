@@ -9,15 +9,14 @@ export default {
       colors: {
         primary: {
             DEFAULT: 'var(--color-primary)',
-            strong: 'var(--color-primary-strong)',
             hover: 'var(--color-primary-hover)',
-            muted: 'var(--color-primary-muted)',
             '25': 'var(--color-primary-25)',
             '50': 'var(--color-primary-50)',
             '75': 'var(--color-primary-75)',
         },
         secondary: {
             DEFAULT: 'var(--color-secondary)',
+            hover: 'var(--color-secondary-hover)',
             '25': 'var(--color-secondary-25)',
             '50': 'var(--color-secondary-50)',
             '75': 'var(--color-secondary-75)',
@@ -67,6 +66,7 @@ export default {
         invert: 'var(--color-text-invert)',
         emphasized: 'var(--color-text-emphasized)',
         placeholder: 'var(--color-text-placeholder)',
+        error: 'var(--color-text-error)',
       },
       borderColor: {
         DEFAULT: 'var(--color-border)',

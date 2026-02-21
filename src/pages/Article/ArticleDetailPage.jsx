@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
-import { getArticleBySlug, formatDate, formatDateDisplay, getRelatedProducts } from '../data/articles';
-import ProductCard from '../components/elements/ProductCard';
-import NotFoundPage from './staticPages/NotFoundPage';
+import { getArticleBySlug, formatDate, formatDateDisplay, getRelatedProducts } from '../../data/articles';
+import ProductCard from '../../components/elements/ProductCard';
+import NotFoundPage from '../staticPages/NotFoundPage';
 
 export default function ArticleDetailPage() {
   const { slug } = useParams();
@@ -105,8 +105,10 @@ export default function ArticleDetailPage() {
             </div>
           </div>
 
-          <Link to="/articles" className="btn bg-card-75 hover:bg-card">
-                ← 返回 Journal
+          <Link to="/articles">
+            <button className="btn-panel text-xs">
+              ← 返回 Journal
+            </button>
           </Link>
 
         </div>

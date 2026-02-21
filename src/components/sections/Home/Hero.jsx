@@ -1,6 +1,6 @@
 export default function Hero() {
     return (
-        <section className="w-full ">
+        <section className="w-full overflow-hidden">
 
             <div  className="relative w-full flex-row-center-center">
 
@@ -30,7 +30,7 @@ export default function Hero() {
                             展現不需張揚的高雅品味。
                             </p>
 
-                            <button className="btn bg-primary-75 text-invert hover:bg-primary mobile:hidden">
+                            <button className="btn-primary mobile:hidden">
                             立即探索
                             </button>
                         </div>

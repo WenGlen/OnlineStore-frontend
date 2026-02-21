@@ -53,16 +53,18 @@ export default function HomePage() {
       <div className="w-full h-12"/>
 
       {/* 精選商品區 */}
-      <section className="w-full bg-panel-50 py-20">
-        <div className="max-w-[1280px] mx-auto px-6">
+      <div className="w-full bg-panel-50 py-20 mx-0">
+        <section className="px-6">
           <div className="flex-row-between-end mb-10">
             <div>
               <h2 className="">優質精品</h2>
               <p className="text-sm text-gray-600">我們精心挑選的健康、充滿活力的蕨類貴族</p>
             </div>
-            <a href="#" className="text-sm">
+            <Link to="/products">
+              <button className="btn-panel text-xs w-32">
               查看全部 →
-            </a>
+              </button>
+            </Link>
           </div>
 
           <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
@@ -70,8 +72,8 @@ export default function HomePage() {
               <ProductCard key={product.id} {...product} page="home" />
             ))}
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
 
       <div className="w-full h-12"/>
@@ -91,7 +93,7 @@ export default function HomePage() {
                 如今，我們管理著一個致力於提供各式高品質鹿角蕨的綠植園。<br/>
                 每一株植物不僅僅是商品——它是經過多年培育的活雕塑，才來到您的家中。
               </p>
-              <button className="px-6 py-3 bg-[#2d5016] hover:bg-[#1f350f] text-white font-medium rounded-lg transition-colors duration-200">
+              <button className="btn-secondary">
                 我們的永續流程 →
               </button>
             </div>

@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 const { VITE_API_URL , VITE_API_PATH } = import.meta.env;
 
-import ProductCard from '../components/elements/ProductCard';
-import Pagination from '../components/Pagination';
+import ProductCard from '../../components/elements/ProductCard';
+
 
 
 export default function ProductsPage() {
@@ -42,54 +42,21 @@ export default function ProductsPage() {
     getProducts();
   }, []);
 
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
+  const [activeCategory, setActiveCategory] = useState('');
   const [sortBy, setSortBy] = useState('popularity');
 
+  // 預設選擇「精品」；若無則選第一個分類
   useEffect(() => {
-    setActiveCategory( categories[0] );
+    if (categories.length) {
+      const defaultCategory = categories.includes('精品') ? '精品' : categories[0];
+      setActiveCategory(defaultCategory);
+    }
   }, [categories]);
 
-
-  // 篩選狀態
-  const [filters, setFilters] = useState({
-    speciesType: [],
-    lightLevel: [],
-    difficulty: []
-  });
-
-
-  const filterOptions = {
-    speciesType: [
-      { id: 'bifurcatum', label: 'P. bifurcatum' },
-      { id: 'ridleyi', label: 'P. ridleyi' },
-      { id: 'grande', label: 'P. grande' },
-      { id: 'coronarium', label: 'P. coronarium' }
-    ],
-    lightLevel: [
-      { id: 'bright', label: 'Bright Indirect' },
-      { id: 'partial', label: 'Partial Shade' }
-    ],
-    difficulty: [
-      { id: 'easy', label: 'Easy' },
-      { id: 'intermediate', label: 'Intermediate' },
-      { id: 'expert', label: 'Expert' }
-    ]
-  };
-
-
-  const totalPages = 3;
-
-  const handleFilterChange = (category, value) => {
-    setFilters(prev => ({
-      ...prev,
-      [category]: prev[category].includes(value)
-        ? prev[category].filter(v => v !== value)
-        : [...prev[category], value]
-    }));
-  };
-
-
+  // 依目前分類篩選產品
+  const filteredProducts = activeCategory
+    ? products.filter((product) => product.category === activeCategory)
+    : products;
 
   return (
 
@@ -105,19 +72,17 @@ export default function ProductsPage() {
           <p>切換分類按鈕尋找你心儀的植物</p>
         </div>
 
-        <div /*tabs-container*/ className="flex-row gap-4">
+        <div /*tabs-container*/ className="flex flex-wrap gap-4">
           {categories.map((category) => (
             <button
               key={category}
-              className={`tab-btn ${activeCategory === category ? 'active' : ''}`}
+              type="button"
+              className={`btn-tag font-serif text-lg tracking-wider ${activeCategory === category ? 'active' : ''}`}
               onClick={() => setActiveCategory(category)}
             >
               {category}
             </button>
           ))}
-            <div className="text-sm text-gray-500">
-              （tabs篩選功能還沒做）
-            </div>
         </div>
 
     </section>
@@ -128,7 +93,7 @@ export default function ProductsPage() {
       <section>
         <div className="flex-row-between-center mt-12 py-4">
           <span className="">
-            此分類 {products.length} 項商品
+            此分類 {filteredProducts.length} 項商品
           </span>
           <div className="collection-products__sort">
             <span>排序方式（功能還沒做）：</span>
@@ -151,7 +116,7 @@ export default function ProductsPage() {
                                                 grid-cols-1 
                                                 sm:grid-cols-2 
                                                 md:grid-cols-3 ">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
                 <Link key={product.id} to={`/product/${product.id}`} className="link-card">
                   <ProductCard {...product} page="products" />
                 </Link>

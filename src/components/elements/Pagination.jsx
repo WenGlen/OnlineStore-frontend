@@ -36,7 +36,7 @@ export default function Pagination({
   const pageNumbers = getPageNumbers();
 
   return (
-    <nav className="flex-row-center-center gap-2 my-16">
+    <nav className="flex-row-center-center gap-2 pb-12">
       <button
         className="btn-icon disabled:opacity-30"
         onClick={onPrevious}
@@ -49,7 +49,7 @@ export default function Pagination({
         {pageNumbers.map((page) => (
           <button
             key={page}
-            className={`btn-numbers ${currentPage === page ? 'active' : ''}`}
+            className={`btn-pagination ${currentPage === page ? 'active' : ''}`}
             onClick={() => onPageClick && onPageClick(page)}
           >
             {page}

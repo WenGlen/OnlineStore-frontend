@@ -1,4 +1,4 @@
-import { careTips, defaultCareTipsTitle } from '../../data/careTips';
+import { careTips, defaultCareTipsTitle } from '../../../data/careTips';
 
 /**
  * 養護重點區塊，可供文章、商品頁、靜態頁等多處共用。

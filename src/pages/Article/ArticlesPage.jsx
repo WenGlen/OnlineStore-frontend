@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import ArticleCard from '../components/elements/ArticleCard';
+import ArticleCard from '../../components/elements/ArticleCard';
 
 
-import Pagination from '../components/elements/Pagination';
-import { articles } from '../data/articles';
-import { getPopularTags } from '../data/articles';
+import Pagination from '../../components/elements/Pagination';
+import { articles } from '../../data/articles';
+import { getPopularTags } from '../../data/articles';
 
 
 
@@ -158,8 +158,11 @@ export default function ArticlesPage() {
             <h2 className="text-white">{latestFeaturedArticle.title}</h2>
             <p className="text-panel">{latestFeaturedArticle.excerpt}</p>
             </div>
-            <Link to={`/articles/${latestFeaturedArticle.slug}`} className="btn bg-card-75 text-textDefaultColor hover:bg-card">
-              閱讀文章 →
+            
+            <Link to={`/articles/${latestFeaturedArticle.slug}`} className="">
+              <button className="btn-muted">
+                閱讀文章 →
+              </button>
             </Link>
 
           </div>
@@ -171,8 +174,10 @@ export default function ArticlesPage() {
         <section className="w-full flex flex-col-reverse md:flex-row md:py-16 gap-8">
           
           {/*文章列表區*/}
-          <div className="w-full md:w-[80%]">
-            <h1 className="text-2xl font-bold">綠蕨故事</h1>
+          <div className="w-full md:w-[80%] space-y-8 ">
+            <div className="w-full border-b border-border-50">
+              <h1 className="text-2xl">綠蕨故事</h1>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12 ">
               {currentArticles.length > 0 ? (
                 currentArticles.map((article) => (
@@ -200,7 +205,7 @@ export default function ArticlesPage() {
           
           {/*文章篩選器*/}
           <aside className="w-full md:w-[20%] min-w-[120px] ">
-            <div className="flex-col gap-4 md:gap-12 pt-8 md:pt-16 ">
+            <div className="flex-col gap-4 md:gap-12 pt-8  ">
 
               {/*搜尋*/}
               <div className="relative flex-row-start-center gap-2">
@@ -216,7 +221,7 @@ export default function ArticlesPage() {
                 <input
                   type="text"
                   placeholder="搜尋文章..."
-                  className="w-full pl-8 p-2 border-0 bg-transparent text-sm
+                  className="w-full pl-8 p-2 border-0 bg-transparent text-sm rounded-none
                             shadow-[inset_0_-1px_0_0_var(--color-border)]
                             focus:shadow-[inset_0_-2px_0_0_var(--color-border)] focus:outline-none"
                   value={searchTerm} onChange={handleSearch}
@@ -227,7 +232,7 @@ export default function ArticlesPage() {
                 <h3 className="text-sm">故事標籤</h3>
                 <div className="flex-row flex-wrap md:flex-col gap-2">
                   {tags.map((tag) => (
-                    <button key={tag} className={`btn text-xs font-bold bg-panel-75 ${activeTag === tag ? 'bg-secondary text-invert' : ''}`}
+                    <button key={tag} className={`btn-tag text-xs font-bold ${activeTag === tag ? 'active' : ''}`}
                       onClick={() => handleTagClick(tag)}
                     >
                       {tag}

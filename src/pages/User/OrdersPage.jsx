@@ -1,49 +1,51 @@
 import { useState } from 'react';
 import { inProgressOrders, orderHistory } from '../../data/userData';
-import OrderItem from '../../components/user/OrderItem';
+import OrderItem from '../../components/elements/OrderItem';
 
 export default function OrdersPage() {
   const [expandedOrderId, setExpandedOrderId] = useState(null);
 
-  const toggleOrderDetails = (orderId) => {
-    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+  const toggleOrder = (orderId) => {
+    setExpandedOrderId((id) => (id === orderId ? null : orderId));
   };
 
   return (
-    <div className="orders-page w-full">
-      {/* In Progress 处理中订单 */}
+    <section className="w-full p-4 md:p-8 max-w-screen-md space-y-8">
+      <div className="w-full border-b border-border-50">
+        <h1 className="text-2xl">訂單</h1>
+      </div>
+
       {inProgressOrders.length > 0 && (
-        <section className="in-progress-orders">
-          <h2 className="section-title">In Progress</h2>
-          <div className="orders-list">
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold">處理中</h3>
+          <ul className="flex flex-col gap-4 list-none p-0 m-0">
             {inProgressOrders.map((order) => (
-              <OrderItem
-                key={order.id}
-                order={order}
-                isInProgress={true}
-              />
+              <li key={order.id}>
+                <OrderItem
+                  order={order}
+                  isExpanded={expandedOrderId === order.id}
+                  onToggle={() => toggleOrder(order.id)}
+                />
+              </li>
             ))}
-          </div>
-        </section>
+          </ul>
+        </div>
       )}
 
-      {/* History 历史订单 */}
-      <section className="order-history">
-        <h2 className="section-title">History</h2>
-        <div className="orders-list">
+      <div className="space-y-4">
+        <h3 className="text-lg font-bold">歷史訂單</h3>
+        <ul className="flex flex-col gap-4 list-none p-0 m-0">
           {orderHistory.map((order) => (
-            <OrderItem
-              key={order.id}
-              order={order}
-              isInProgress={false}
-              isExpanded={expandedOrderId === order.id}
-              onToggleDetails={() => toggleOrderDetails(order.id)}
-            />
+            <li key={order.id}>
+              <OrderItem
+                order={order}
+                isExpanded={expandedOrderId === order.id}
+                onToggle={() => toggleOrder(order.id)}
+              />
+            </li>
           ))}
-        </div>
-      </section>
-    </div>
+        </ul>
+      </div>
+    </section>
   );
 }
-
-

@@ -1,18 +1,37 @@
 import { useState, useEffect } from 'react';
 import OrderSummary from '../../components/sections/Order/OrderSummary';
+import FormInput from '../../components/elements/FormInput';
 
-export default function ConfirmPage() {
+export default function ConfirmPage({
+    cartItems,
+    setStep,
+    onConfirm,
+}) {
 
     //暫時用會員登錄
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [useDefaultShippingInfo, setUseDefaultShippingInfo] = useState(false);
     const [useDefaultPaymentInfo, setUseDefaultPaymentInfo] = useState(false);
-    const [freight, setFreight] = useState(0);
+
+    /** 小計（未含運費、折扣），用於滿額免運、貨到付款門檻與 OrderSummary */
+    const subtotal = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const FREE_SHIPPING_THRESHOLD = 2000;
+    const DEFAULT_FREIGHT = 120;
+    /** 貨到付款僅適用於小計 2000 元以下（與免運門檻相同） */
+    const isCashOnDeliveryAvailable = subtotal < FREE_SHIPPING_THRESHOLD;
+
+    /** 折扣碼：輸入值、套用後的折扣金額（0 表示未套用或無效） */
+    const [discountCodeInput, setDiscountCodeInput] = useState('');
+    const [appliedDiscount, setAppliedDiscount] = useState(0);
 
 
+    const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
     const [orderersInfo, setOrderersInfo] = useState({ name: '', phone: '', email: '' });
-    const [paymentInfo, setPaymentInfo] = useState({ type: '', account: '', expiryDate: '', CVV: '', cardHolderName: '' });
-    const [shippingInfo, setShippingInfo] = useState({ name: '', phone: '', address: '', pickupTime: '' });
+    const [paymentInfo, setPaymentInfo] = useState({ type: '信用卡', account: '', expiryDate: '', CVV: '', cardHolderName: '' });
+    const [shippingInfo, setShippingInfo] = useState({ type: '宅配', name: '', phone: '', address: '', pickupTime: '' });
+
+    /** 到店取貨免運費；宅配則依滿額免運門檻計算 */
+    const freight = shippingInfo.type === '到店取貨' ? 0 : (subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : DEFAULT_FREIGHT);
 
     const defaultUserInfo = {
         name: '綠先生',
@@ -24,7 +43,7 @@ export default function ConfirmPage() {
         type: '信用卡',
         account: '1234567890123456',
         expiryDate: '12 / 26',
-        CVV: '123',
+        CVV: '123（正常來說不會存啦，這邊只是方便填寫）',
         cardHolderName: '綠黃藍',
     };
 
@@ -60,6 +79,64 @@ export default function ConfirmPage() {
     }
     const validPickupDates = getValidPickupDates();
 
+    /** 小計滿 2000 時若已選貨到付款，自動改為信用卡 */
+    useEffect(() => {
+        if (!isCashOnDeliveryAvailable && paymentInfo.type === '貨到付款') {
+            setPaymentInfo((prev) => ({ ...prev, type: '信用卡' }));
+        }
+    }, [isCashOnDeliveryAvailable, paymentInfo.type]);
+
+    /** 必填欄位驗證 */
+    const isOrderersInfoValid =
+        orderersInfo.name.trim() !== '' &&
+        orderersInfo.phone.trim() !== '' &&
+        orderersInfo.email.trim() !== '';
+
+    const isPaymentInfoValid =
+        paymentInfo.type === '貨到付款' ||
+        (
+            paymentInfo.account.replace(/\D/g, '').length === 16 &&
+            paymentInfo.expiryDate.trim() !== '' &&
+            paymentInfo.CVV.trim() !== '' &&
+            paymentInfo.cardHolderName.trim() !== ''
+        );
+
+    const isShippingInfoValid =
+        shippingInfo.name.trim() !== '' &&
+        shippingInfo.phone.trim() !== '' &&
+        (shippingInfo.type === '宅配'
+            ? shippingInfo.address.trim() !== ''
+            : shippingInfo.pickupTime !== '');
+
+    const isFormValid = isOrderersInfoValid && isPaymentInfoValid && isShippingInfoValid;
+
+    /** 未填寫完整的段落名稱，用於提示 */
+    const invalidSections = [];
+    if (!isOrderersInfoValid) invalidSections.push('訂購資訊');
+    if (!isPaymentInfoValid) invalidSections.push('付款資訊');
+    if (!isShippingInfoValid) invalidSections.push('收件資訊');
+
+    function handleSubmit(e) {
+        e.preventDefault();
+        if (!isFormValid) {
+            setHasAttemptedSubmit(true);
+            return;
+        }
+        if (onConfirm) {
+            onConfirm({ orderersInfo, shippingInfo, freight, appliedDiscount });
+        } else {
+            setStep(2);
+        }
+    }
+
+    /** 折扣碼套用（範例：SAVE50 → 折 50 元、SAVE100 → 折 100 元） */
+    const MOCK_DISCOUNT_CODES = { SAVE50: 50, SAVE100: 100, HEX: 200 };
+    function applyDiscountCode() {
+        const code = discountCodeInput.trim().toUpperCase();
+        const amount = MOCK_DISCOUNT_CODES[code];
+        setAppliedDiscount(amount != null ? amount : 0);
+    }
+
     function applyDefaultPaymentInfo() {
         const next = !useDefaultPaymentInfo; //反轉useDefaultPaymentInfo的值，預設為false，反轉為true
         setUseDefaultPaymentInfo(next);
@@ -76,134 +153,92 @@ export default function ConfirmPage() {
     }
 
 
-
-    const cartItems = [
-        {
-            id: 1,
-            name: '綠色植物',
-            price: 100,
-            quantity: 1,
-        },
-        {
-            id: 2,
-            name: '綠色植物2',
-            price: 200,
-            quantity: 2,
-        },
-        {
-            id: 3,
-            name: '綠色植物3',
-            price: 300,
-            quantity: 3,
-        },
-    ];
-
     return (
         <>
-        <div className="w-full max-w-screen-xl mx-auto flex" /* container */>
-            <div className="fixed bottom-0 right-0 w-[160px] bg-black/50 z-[999] p-2 text-xs text-white">
-                <div>開發用</div>
-                <div>登入狀態：{isLoggedIn ? '登入' : '未登入'}</div>
-                <div>付款方式：{paymentInfo.type}</div>
-            </div>
-        <section className=" w-full p-8 max-w-screen-md space-y-8">
-            <h2 className="text-2xl font-bold">填寫訂單資訊</h2>
+        <div className="w-full max-w-screen-xl mx-auto flex flex-col md:flex-row gap-0 md:gap-8" /* container */>
 
-            <form className="flex flex-col">
+        <section className="w-full p-4 md:p-8 max-w-screen-md space-y-8">
+            <div className="w-full border-b border-border-50 hidden md:block">
+                <h2 className="">訂單資訊</h2>
+            </div>
+
+            <form className="flex flex-col" onSubmit={handleSubmit}>
                 {/* 訂購資訊 */}
-                <div className="w-full border-t border-border py-12  space-y-4">
-                    <div className="flex items-center gap-8 justify-between">
-                        <h3>訂購資訊</h3> 
-                        <div className="text-xs text-gray-500">（實際會員登入功能還沒做，先做個帶做預設資料的按鈕）</div>
-                        <button type="button" className="btn bg-primary text-white" 
+                <div className="w-full border-b border-border-50 py-12 space-y-4">
+                    <div className="flex gap-2 items-center md:gap-8 justify-between">
+                        <h3 className="text-lg font-bold">訂購資訊</h3>
+                        <div className="hidden md:block text-xs text-gray-500 w-[300px] text-right">（實際會員登入功能還沒做，<br/>先做個帶做預設資料的按鈕）</div>
+                        <button type="button" className="btn-primary text-xs " 
                                 disabled={isLoggedIn}
                                 onClick={() => (setIsLoggedIn(true), setOrderersInfo({ ...defaultUserInfo }),applyDefaultPaymentInfo(),applyDefaultShippingInfo())}>
-                            {isLoggedIn ? '已登入' : '登入會員'}
+                            {isLoggedIn ? '已登入' : '登入會員自動帶入資訊'}
                         </button>
-
                     </div>
 
-                    <div className="flex gap-8">
-                        <label className="w-full flex items-center gap-2">
-                            <span>訂購人姓名</span>
-                            <input type="text" className="flex-1" value={orderersInfo.name} disabled={isLoggedIn} 
-                                onChange={(e) => setOrderersInfo((prev) => ({ ...prev, name: e.target.value }))} 
-                                placeholder="請輸入訂購人姓名"/>
-                        </label>
-                        <label className="w-full flex items-center gap-2 ">
-                            <span >訂購人電話</span>
-                            <input type="text" className="flex-1" value={orderersInfo.phone} disabled={isLoggedIn} 
-                                onChange={(e) => setOrderersInfo((prev) => ({ ...prev, phone: e.target.value }))} 
-                                placeholder="請輸入訂購人電話"/>
-                        </label>
+                    <div className="flex flex-col gap-4 md:flex-row md:gap-8">
+                        <FormInput label="訂購人姓名" value={orderersInfo.name} disabled={isLoggedIn}
+                            onChange={(e) => setOrderersInfo((prev) => ({ ...prev, name: e.target.value }))}
+                            placeholder="請輸入訂購人姓名" />
+                        <FormInput label="訂購人電話" value={orderersInfo.phone} disabled={isLoggedIn}
+                            onChange={(e) => setOrderersInfo((prev) => ({ ...prev, phone: e.target.value }))}
+                            placeholder="請輸入訂購人電話" />
                     </div>
-                    <label className="flex items-center gap-2">
-                        <span>訂購人Email</span>
-                        <input type="text" className="flex-1" value={orderersInfo.email} disabled={isLoggedIn} 
-                               onChange={(e) => setOrderersInfo((prev) => ({ ...prev, email: e.target.value }))} 
-                               placeholder="請輸入訂購人Email"/>
-                    </label>
+                    <FormInput label="會員 Email" value={orderersInfo.email} disabled={isLoggedIn}
+                        onChange={(e) => setOrderersInfo((prev) => ({ ...prev, email: e.target.value }))}
+                        placeholder="請輸入訂購人Email" />
 
                 </div>
 
 
                 {/* 付款資訊 */}
-                <div className="w-full border-t border-border py-12  space-y-4">
-                    <div className="flex items-center gap-8">
-                        <h3>付款資訊</h3> 
+                <div className="w-full border-b border-border-50 py-12 space-y-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
+                        <h3 className="text-lg font-bold">付款資訊</h3>
                         {isLoggedIn && (
                         <div className="flex items-center gap-2">
-                            <input type="checkbox" id="useDefaultPaymentInfo" className="w-5 h-5 " 
+                            <input type="checkbox" id="useDefaultPaymentInfo" className="w-5 h-5" 
                                    checked={useDefaultPaymentInfo} onChange={applyDefaultPaymentInfo} />
                             <label htmlFor="useDefaultPaymentInfo" className="text-sm">使用預設付款資料</label>
                         </div>
                         )}
                     </div>
 
-                    <div className="w-fit flex items-center rounded-md overflow-hidden">
-                        <button type="button" className={`btn-select ${paymentInfo.type === '信用卡' ? 'btn-select--active' : ''}`} 
+                    <div className="w-full md:w-fit flex rounded-md overflow-hidden gap-0 sm:gap-0">
+                        <button type="button" className={`btn-segmented flex-1 sm:flex-initial ${paymentInfo.type === '信用卡' ? 'active' : ''}`} 
                                 onClick={() => setPaymentInfo((prev) => ({ ...prev, type: '信用卡' }))}>
                             信用卡
                         </button>
-                        <button type="button" className={`btn-select ${paymentInfo.type === '貨到付款' ? 'btn-select--active' : ''}`} 
+                        <button type="button" className={`btn-segmented flex-1 sm:flex-initial ${paymentInfo.type === '貨到付款' ? 'active' : ''}`}
+                                disabled={!isCashOnDeliveryAvailable}
                                 onClick={() => setPaymentInfo((prev) => ({ ...prev, type: '貨到付款' }))}>
-                            貨到付款（2000元以下適用）
+                            貨到付款<br className="block md:hidden "/>（2000元以下適用）
                         </button>
                     </div>
-                    {paymentInfo.type === '信用卡' && (
+                    {paymentInfo.type === '信用卡' ? (
                     <>
-                        <label className="flex items-center gap-2">
-                            <span>信用卡卡號</span>
-                                <input type="text" className="flex-1" value={formatCardNumber(paymentInfo.account)} disabled={useDefaultPaymentInfo} 
-                                    onChange={(e) => {
-                                        const digits = e.target.value.replace(/\D/g, '').slice(0, 16);
-                                        setPaymentInfo((prev) => ({ ...prev, account: digits }));
-                                    }} 
-                                    placeholder="xxxx xxxx xxxx xxxx"/>
-                        </label>
+                        <FormInput label="信用卡卡號" value={formatCardNumber(paymentInfo.account)} disabled={useDefaultPaymentInfo}
+                            onChange={(e) => {
+                                const digits = e.target.value.replace(/\D/g, '').slice(0, 16);
+                                setPaymentInfo((prev) => ({ ...prev, account: digits }));
+                            }}
+                            placeholder="xxxx xxxx xxxx xxxx" />
 
-                        <div className="flex gap-8">
-
-                            <label className="w-full flex items-center gap-2">
-                                <span>　　到期日</span>
-                                <input type="text" className="flex-1" value={paymentInfo.expiryDate} disabled={useDefaultPaymentInfo} 
-                                    onChange={(e) => setPaymentInfo((prev) => ({ ...prev, expiryDate: e.target.value }))} 
-                                    placeholder="MM / YY"/>
-                            </label>
-                            <label className="w-full flex items-center gap-2 ">
-                                <span >　　CVV</span>
-                                <input type="text" className="flex-1" value={paymentInfo.CVV} disabled={useDefaultPaymentInfo} 
-                                    onChange={(e) => setPaymentInfo((prev) => ({ ...prev, CVV: e.target.value }))} 
-                                    placeholder="xxx"/>
-                            </label>
+                        <div className="flex flex-col gap-4 md:flex-row md:gap-8">
+                            <FormInput label="到期日" value={paymentInfo.expiryDate} disabled={useDefaultPaymentInfo}
+                                onChange={(e) => setPaymentInfo((prev) => ({ ...prev, expiryDate: e.target.value }))}
+                                placeholder="MM / YY" />
+                            <FormInput label="CVV" value={paymentInfo.CVV} 
+                                onChange={(e) => setPaymentInfo((prev) => ({ ...prev, CVV: e.target.value }))}
+                                placeholder="xxx" />
                         </div>
 
-                        <label className="flex items-center gap-2">
-                            <span>持卡人姓名</span>
-                                <input type="text" className="flex-1" value={paymentInfo.cardHolderName} disabled={useDefaultPaymentInfo} 
-                                    onChange={(e) => setPaymentInfo((prev) => ({ ...prev, cardHolderName: e.target.value }))} 
-                                    placeholder="請輸入持卡人姓名"/>
-                        </label>
+                        <FormInput label="持卡人姓名" value={paymentInfo.cardHolderName} disabled={useDefaultPaymentInfo}
+                            onChange={(e) => setPaymentInfo((prev) => ({ ...prev, cardHolderName: e.target.value }))}
+                            placeholder="請輸入持卡人姓名" />
+                    </>
+                    ):(
+                    <>
+                        <p className="text-sm text-muted">貨到付款適用於折價前總金額為2000元以下訂單</p>
                     </>
                     )}
 
@@ -212,79 +247,136 @@ export default function ConfirmPage() {
 
 
                 {/* 收件資訊 */}
-                <div className="w-full border-t border-border py-12  space-y-4">
-                    <div className="flex items-center gap-8">
-                        <h3 className="">收件資訊</h3>
+                <div className="w-full border-b border-border-50 py-12 space-y-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-8">
+                        <h3 className="text-lg font-bold">收件資訊</h3>
                         {isLoggedIn && (
                         <div className="flex items-center gap-2">
-                            <input type="checkbox" id="useDefaultShippingInfo" className="w-5 h-5 " 
+                            <input type="checkbox" id="useDefaultShippingInfo" className="w-5 h-5" 
                                    checked={useDefaultShippingInfo} onChange={applyDefaultShippingInfo} />
                             <label htmlFor="useDefaultShippingInfo" className="text-sm">使用預設收件資料</label>
                         </div>
                         )}
                     </div>
 
-                    <div className="w-fit flex items-center rounded-md overflow-hidden">
-                        <button type="button" className={`btn-select ${shippingInfo.type === '宅配' ? 'btn-select--active' : ''}`} 
+                    <div className="w-full md:w-fit flex rounded-md overflow-hidden gap-0 sm:gap-0">
+                        <button type="button" className={`btn-segmented flex-1 sm:flex-initial ${shippingInfo.type === '宅配' ? 'active' : ''}`} 
                                 onClick={() => setShippingInfo((prev) => ({ ...prev, type: '宅配' }))}>
                             宅配
                         </button>
-                        <button type="button" className={`btn-select ${shippingInfo.type === '到店取貨' ? 'btn-select--active' : ''}`} 
+                        <button type="button" className={`btn-segmented flex-1 sm:flex-initial ${shippingInfo.type === '到店取貨' ? 'active' : ''}`} 
                                 onClick={() => setShippingInfo((prev) => ({ ...prev, type: '到店取貨' }))}>
                             到店取貨
                         </button>
                     </div>
 
-
-
-                        <div className="flex gap-8">
-                            <label className="w-full flex items-center gap-2">
-                                <span>收件人姓名</span>
-                                <input type="text" className="flex-1" value={shippingInfo.name} disabled={useDefaultShippingInfo} 
-                                    onChange={(e) => setShippingInfo((prev) => ({ ...prev, name: e.target.value }))} 
-                                    placeholder="請輸入收件人姓名"/>
-                            </label>
-                            <label className="w-full flex items-center gap-2 ">
-                                <span >收件人電話</span>
-                                <input type="text" className="flex-1" value={shippingInfo.phone} disabled={useDefaultShippingInfo} 
-                                    onChange={(e) => setShippingInfo((prev) => ({ ...prev, phone: e.target.value }))} 
-                                    placeholder="請輸入收件人電話"/>
-                            </label>
+                        <div className="flex flex-col gap-4 md:flex-row md:gap-8">
+                            <FormInput label="收件人姓名" value={shippingInfo.name} disabled={useDefaultShippingInfo}
+                                onChange={(e) => setShippingInfo((prev) => ({ ...prev, name: e.target.value }))}
+                                placeholder="請輸入收件人姓名" />
+                            <FormInput label="收件人電話" value={shippingInfo.phone} disabled={useDefaultShippingInfo}
+                                onChange={(e) => setShippingInfo((prev) => ({ ...prev, phone: e.target.value }))}
+                                placeholder="請輸入收件人電話" />
                         </div>
                         {shippingInfo.type === '宅配' ? (
                         <>
-                            <label className="flex items-center gap-2">
-                                <span>　收件地址</span>
-                                <input type="text" className="flex-1" value={shippingInfo.address} disabled={useDefaultShippingInfo} 
-                                    onChange={(e) => setShippingInfo((prev) => ({ ...prev, address: e.target.value }))} 
-                                    placeholder="請輸入收件地址"/>
-                            </label>
+                            <FormInput label="收件地址" value={shippingInfo.address} disabled={useDefaultShippingInfo}
+                                onChange={(e) => setShippingInfo((prev) => ({ ...prev, address: e.target.value }))}
+                                placeholder="請輸入收件地址" />
                         </>
                         ):
                         <>
-                            <label className="flex items-center gap-2 ">
-                                <span>預計取貨日</span>
-                                <select className="w-[200px]" value={shippingInfo.pickupTime} disabled={useDefaultShippingInfo}
-                                    onChange={(e) => setShippingInfo((prev) => ({ ...prev, pickupTime: e.target.value }))}>
-                                    <option value="">請選擇取貨日</option>
-                                    {validPickupDates.map((d) => (
-                                        <option key={d.value} value={d.value}>{d.label}</option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-muted w-[300px] ">取貨日為隔天起 7 日內（週四不營業）<br/>請於 11:00–21:00 到店取貨</p>
-                            </label>
-
-
-                            <div className="flex items-center gap-2">
-                                <span>綠蕨飾店址</span>
-                                <p>台北市大安區忠孝東路四段100號</p>
+                            <div className="flex flex-col gap-2 md:flex-row md:items-center md:gap-2">
+                                <label className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
+                                    <span className="form-label">預計取貨日</span>
+                                    <select className="w-full md:w-[200px] min-w-0" value={shippingInfo.pickupTime}
+                                        onChange={(e) => setShippingInfo((prev) => ({ ...prev, pickupTime: e.target.value }))}>
+                                        <option value="">請選擇取貨日</option>
+                                        {validPickupDates.map((d) => (
+                                            <option key={d.value} value={d.value}>{d.label}</option>
+                                        ))}
+                                    </select>
+                                </label>
+                                <p className="text-xs text-muted md:w-[300px] ml-2">取貨日為隔天起 7 日內（週四不營業）<br/>請於 11:00–21:00 到店取貨</p>
                             </div>
+
+                            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+                                <span className="form-label">綠蕨飾店址</span>
+                                <p className="text-sm text-muted">台北市大安區忠孝東路四段100號</p>
+                            </div>
+
                         </>}
                     
                 </div>
+
+                <div className="w-full border-b border-border-50 py-12 space-y-4">
+                    <h3 className="text-lg font-bold">折扣優惠</h3>
+
+                    {/* 優惠說明：滿 2000 免運 */}
+                    <div className="rounded-md bg-panel-50 p-4 space-y-1">
+                        
+                        
+                        {freight === 0 ? (
+                            <p className="text-xs">小計 $NT ${subtotal.toLocaleString()}，已達 2000 元免運門檻。</p>
+                        ) : (
+                            <>
+                                <p className="text-sm font-medium">若滿 $NT 2,000 即享免運費</p>
+                                <p className="text-xs text-muted">小計 $NT ${subtotal.toLocaleString()}，還差 $NT ${(FREE_SHIPPING_THRESHOLD - subtotal).toLocaleString()} 即享免運。</p>
+                            </>
+                        )
+                        }
+                    
+                </div>
+
+                    {/* 折扣碼 */}
+                    <label className="flex flex-col gap-1 md:flex-row md:items-center md:gap-2">
+                        <span className="form-label">折扣碼</span>
+                        <div className="w-full flex gap-2">
+                            <input
+                                    type="text"
+                                    className="flex-1 min-w-0"
+                                    value={discountCodeInput}
+                                    onChange={(e) => setDiscountCodeInput(e.target.value)}
+                                    placeholder="請輸入折扣碼"
+                                />
+                            <button
+                                type="button"
+                                className="btn-secondary"
+                                onClick={applyDiscountCode}
+                            >
+                                套用
+                            </button>
+                        </div>
+                    </label>
+
+                    {appliedDiscount > 0 && (
+                        <p className="text-sm text-primary">已套用折扣，折抵 $NT {appliedDiscount} <br/>每筆訂單只能使用一次折扣碼</p>
+                    )}
+
+
+                </div>
+
+                <div className="py-8 block md:hidden">
+                    <div className="bg-panel-50 p-4 rounded-md space-y-8 sticky top-4">
+                        <h3 className="text-lg font-bold">訂單內容</h3>
+                        <OrderSummary items={cartItems} freight={freight} discount={appliedDiscount} />
+                    </div>
+                </div>
+                
+
                 {/* 送出訂單按鈕 */}
-                <div className="w-full border-t border-border py-12 flex justify-end">
-                    <button className="btn bg-primary text-white">送出訂單</button>
+                <div className="w-full py-6 md:py-12 flex flex-col md:flex-row items-center justify-end gap-2 md:gap-4">
+                    {hasAttemptedSubmit && !isFormValid && invalidSections.length > 0 && (
+                        <span className="text-sm text-error w-full md:w-auto md:mr-auto" role="alert">
+                            請填寫完：{invalidSections.join('、')}
+                        </span>
+                    )}
+                    <button
+                        type="submit"
+                        className="btn-primary"
+                    >
+                        送出訂單
+                    </button>
                 </div>
 
             </form>
@@ -292,10 +384,10 @@ export default function ConfirmPage() {
         </section>
 
 
-        <aside className="w-full md:w-[400px] py-12">
-            <div className="bg-panel-50 p-4 rounded-md space-y-8">
-                <h3>訂單內容</h3>
-                <OrderSummary items={cartItems} freight={freight} />
+        <aside className="py-28 pr-8 hidden md:block">
+            <div className="w-[400px] bg-panel-50 p-4 rounded-md space-y-8">
+                <h3 className="text-lg font-bold">訂單內容</h3>
+                <OrderSummary items={cartItems} freight={freight} discount={appliedDiscount} />
             </div>
         </aside>
 
@@ -303,228 +395,6 @@ export default function ConfirmPage() {
 
         </div>
 
-
-
-
-
-
-
-{/* Main Content Area */}
-<div className="flex-1 flex justify-center py-10 px-6 md:px-20 lg:px-40">
-<div className="flex flex-col lg:flex-row w-full max-w-[1200px] gap-12">
-{/* Left Column: Checkout Form */}
-<div className="">
-<div className="flex-1 space-y-8">
-{/* Breadcrumbs & Heading */}
-
-<hr className="border-border-light dark:border-white/10"/>
-{/* Contact Information Section */}
-<section>
-<h3 className="text-text-main dark:text-white text-xl font-bold mb-4">Contact Information</h3>
-<div className="space-y-4">
-<div className="flex flex-col w-full">
-<p className="text-text-main dark:text-white/90 text-base font-medium leading-normal pb-2">Email Address</p>
-<input className="form-input flex w-full rounded-lg text-text-main focus:outline-0 focus:ring-2 focus:ring-primary/20 border border-border-light bg-background-light dark:bg-background-dark dark:text-white dark:border-white/20 h-14 placeholder:text-text-muted/50 px-4 text-base font-normal" placeholder="e.g. gardener@nature.com" type="email"/>
-</div>
-<div className="px-1">
-<label className="flex gap-x-3 items-center cursor-pointer">
-<input className="h-5 w-5 rounded border-border-light border-2 bg-transparent text-primary checked:bg-primary checked:border-primary focus:ring-0 focus:ring-offset-0 focus:border-primary focus:outline-none" type="checkbox"/>
-<p className="text-text-muted dark:text-white/70 text-sm font-normal">Keep me up to date on news and exclusive botanical offers</p>
-</label>
-</div>
-</div>
-</section>
-{/* Shipping Address Section */}
-<section className="space-y-4">
-<h3 className="text-text-main dark:text-white text-xl font-bold mb-2">Shipping Address</h3>
-<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-<div className="flex flex-col">
-<p className="text-text-main dark:text-white/90 text-sm font-medium pb-2">First Name</p>
-<input className="form-input rounded-lg border-border-light bg-background-light dark:bg-background-dark dark:text-white dark:border-white/20 h-12 px-4 focus:ring-primary/20" type="text"/>
-</div>
-<div className="flex flex-col">
-<p className="text-text-main dark:text-white/90 text-sm font-medium pb-2">Last Name</p>
-<input className="form-input rounded-lg border-border-light bg-background-light dark:bg-background-dark dark:text-white dark:border-white/20 h-12 px-4 focus:ring-primary/20" type="text"/>
-</div>
-<div className="flex flex-col md:col-span-2">
-<p className="text-text-main dark:text-white/90 text-sm font-medium pb-2">Address</p>
-<input className="form-input rounded-lg border-border-light bg-background-light dark:bg-background-dark dark:text-white dark:border-white/20 h-12 px-4 focus:ring-primary/20" placeholder="Street and house number" type="text"/>
-</div>
-<div className="flex flex-col md:col-span-2">
-<p className="text-text-main dark:text-white/90 text-sm font-medium pb-2">Apartment, suite, etc. (optional)</p>
-<input className="form-input rounded-lg border-border-light bg-background-light dark:bg-background-dark dark:text-white dark:border-white/20 h-12 px-4 focus:ring-primary/20" type="text"/>
-</div>
-<div className="flex flex-col">
-<p className="text-text-main dark:text-white/90 text-sm font-medium pb-2">City</p>
-<input className="form-input rounded-lg border-border-light bg-background-light dark:bg-background-dark dark:text-white dark:border-white/20 h-12 px-4 focus:ring-primary/20" type="text"/>
-</div>
-<div className="flex flex-col">
-<p className="text-text-main dark:text-white/90 text-sm font-medium pb-2">Postal Code</p>
-<input className="form-input rounded-lg border-border-light bg-background-light dark:bg-background-dark dark:text-white dark:border-white/20 h-12 px-4 focus:ring-primary/20" type="text"/>
-</div>
-</div>
-</section>
-<div className="flex items-center justify-between pt-6">
-<a className="text-text-muted hover:text-text-main flex items-center gap-2 font-medium transition-colors" href="#">
-<span className="material-symbols-outlined">chevron_left</span>
-                                Return to Cart
-                            </a>
-<button className="bg-primary hover:bg-primary/90 text-text-main px-8 h-14 rounded-lg font-bold text-lg shadow-lg shadow-primary/20 transition-all">
-                                Continue to Shipping
-                            </button>
-</div>
-</div>
-<div className="flex-1 flex flex-col gap-6">
-    {/* PageHeading */}
-    <div className="flex flex-col gap-2 px-4">
-    <h1 className="text-[#0d1b0f] dark:text-white text-4xl font-black leading-tight tracking-[-0.033em]">Payment Method</h1>
-    <p className="text-[#4c9a52] text-base font-normal leading-normal">Choose your preferred way to complete the purchase. All transactions are secure and encrypted.</p>
-    </div>
-    {/* RadioList - Payment Options */}
-    <div className="flex flex-col gap-3 px-4 radio-dot-svg">
-    <label className="group flex items-start gap-4 rounded-xl border-2 border-solid border-[#cfe7d1] dark:border-white/10 p-5 bg-white dark:bg-white/5 cursor-pointer transition-all hover:border-primary/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-    <input checked="" className="mt-1 h-5 w-5 border-2 border-[#cfe7d1] bg-transparent text-transparent checked:border-primary checked:bg-[image:--radio-dot-svg] focus:outline-none focus:ring-0 focus:ring-offset-0" name="payment-method" type="radio"/>
-    <div className="flex grow flex-col">
-    <div className="flex items-center justify-between mb-2">
-    <p className="text-[#0d1b0f] dark:text-white text-base font-semibold leading-normal">Credit / Debit Card</p>
-    <div className="flex gap-2">
-    <span className="material-symbols-outlined text-[#4c9a52]">credit_card</span>
-    </div>
-    </div>
-    {/* Nested TextField for Credit Card (Shown when selected) */}
-    <div className="mt-4 flex flex-col gap-4 animate-in fade-in duration-500">
-    <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold uppercase tracking-wider text-[#4c9a52]">Card Number</label>
-    <div className="relative">
-    <input className="w-full rounded-lg border border-[#cfe7d1] dark:border-white/10 bg-transparent p-4 text-[#0d1b0f] dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="0000 0000 0000 0000"/>
-    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex gap-2">
-    <span className="material-symbols-outlined text-[#cfe7d1]">lock</span>
-    </div>
-    </div>
-    </div>
-    <div className="grid grid-cols-2 gap-4">
-    <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold uppercase tracking-wider text-[#4c9a52]">Expiry Date</label>
-    <input className="w-full rounded-lg border border-[#cfe7d1] dark:border-white/10 bg-transparent p-4 text-[#0d1b0f] dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="MM / YY"/>
-    </div>
-    <div className="flex flex-col gap-2">
-    <label className="text-xs font-bold uppercase tracking-wider text-[#4c9a52]">CVV</label>
-    <input className="w-full rounded-lg border border-[#cfe7d1] dark:border-white/10 bg-transparent p-4 text-[#0d1b0f] dark:text-white focus:border-primary focus:ring-1 focus:ring-primary outline-none" placeholder="123"/>
-    </div>
-    </div>
-    </div>
-    </div>
-    </label>
-    <label className="group flex items-center gap-4 rounded-xl border-2 border-solid border-[#cfe7d1] dark:border-white/10 p-5 bg-white dark:bg-white/5 cursor-pointer transition-all hover:border-primary/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-    <input className="h-5 w-5 border-2 border-[#cfe7d1] bg-transparent text-transparent checked:border-primary checked:bg-[image:--radio-dot-svg] focus:outline-none focus:ring-0 focus:ring-offset-0" name="payment-method" type="radio"/>
-    <div className="flex grow items-center justify-between">
-    <div className="flex flex-col">
-    <p className="text-[#0d1b0f] dark:text-white text-base font-semibold leading-normal">Apple Pay</p>
-    <p className="text-[#4c9a52] text-xs font-normal leading-normal">One-touch secure checkout</p>
-    </div>
-    <span className="material-symbols-outlined text-black dark:text-white">contactless</span>
-    </div>
-    </label>
-    <label className="group flex items-center gap-4 rounded-xl border-2 border-solid border-[#cfe7d1] dark:border-white/10 p-5 bg-white dark:bg-white/5 cursor-pointer transition-all hover:border-primary/50 has-[:checked]:border-primary has-[:checked]:bg-primary/5">
-    <input className="h-5 w-5 border-2 border-[#cfe7d1] bg-transparent text-transparent checked:border-primary checked:bg-[image:--radio-dot-svg] focus:outline-none focus:ring-0 focus:ring-offset-0" name="payment-method" type="radio"/>
-    <div className="flex grow items-center justify-between">
-    <div className="flex flex-col">
-    <p className="text-[#0d1b0f] dark:text-white text-base font-semibold leading-normal">Bank Transfer</p>
-    <p className="text-[#4c9a52] text-xs font-normal leading-normal">Direct payment from your bank account</p>
-    </div>
-    <span className="material-symbols-outlined text-[#4c9a52]">account_balance</span>
-    </div>
-    </label>
-    </div>
-    {/* Final Confirmation & Button */}
-    <div className="px-4 py-4 flex flex-col gap-4">
-    <div className="flex items-center gap-2 p-3 bg-primary/10 rounded-lg border border-primary/20">
-    <span className="material-symbols-outlined text-primary text-[20px]">verified_user</span>
-    <p className="text-xs text-[#0d1b0f] dark:text-[#a0cfa3] font-medium">Your data is protected by industry-standard TLS encryption.</p>
-    </div>
-    <button className="w-full flex cursor-pointer items-center justify-center overflow-hidden rounded-xl h-14 bg-[#102212] dark:bg-primary text-white gap-2 text-lg font-bold leading-normal tracking-[0.015em] hover:scale-[1.01] active:scale-[0.99] transition-all shadow-lg shadow-[#102212]/20">
-    <span className="truncate">Complete Order</span>
-    <span className="material-symbols-outlined">arrow_forward</span>
-    </button>
-    </div>
-</div>
-</div>
-
-{/* Right Column: Sticky Order Summary */}
-<aside className="w-full lg:w-[400px]">
-<div className="sticky top-10 bg-panel-50 dark:bg-white/5 rounded-xl p-8 border border-primary/10 dark:border-white/10">
-<h3 className="text-text-main dark:text-white text-xl font-bold mb-6">Order Summary</h3>
-{/* Product List */}
-<div className="space-y-4 mb-8">
-<div className="flex items-center gap-4">
-<div className="relative w-16 h-16 bg-white dark:bg-background-dark rounded-lg overflow-hidden border border-border-light dark:border-white/10">
-<img alt="Platycerium bifurcatum" className="object-cover w-full h-full" data-alt="Vibrant green Platycerium bifurcatum mounted on wood" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCIG7L6f0-T-V7_8zyLcdVoiz_Uohd6EeewXnu2lXU6i8E953FcHyU-bxuB7be2a2srJqjmKjvLWiIksWFMSZF7UYqCLx93NYZ2xPJJFo7EL1tlAKrCy2jgZAx-4n7zB0WYlVLNbbR9AGrX9PeSYu8S_vGpNTGUqWyqvZxr3mfo8N9lwUietFM3R3b_yQRUrL0ZX4o_XfFIVbWRAYyEwJ9q_o0Xh3wZ5NWATVWRfW4fLyvoi3pHzEocYGlX5p1Au2ZaFEnql8Q37EBY"/>
-<span className="absolute -top-2 -right-2 bg-text-muted text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">1</span>
-</div>
-<div className="flex-1">
-<p className="text-text-main dark:text-white text-sm font-bold">Platycerium Bifurcatum</p>
-<p className="text-text-muted text-xs">Standard Mount</p>
-</div>
-<p className="text-text-main dark:text-white text-sm font-bold">$45.00</p>
-</div>
-<div className="flex items-center gap-4">
-<div className="relative w-16 h-16 bg-white dark:bg-background-dark rounded-lg overflow-hidden border border-border-light dark:border-white/10">
-<img alt="Platycerium grande" className="object-cover w-full h-full" data-alt="Large majestic Platycerium grande fern leaves" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA4s6eSiuXS8c-Pn69w5N3slBrnvcWPHa3F9vZt-Zcf0flrHksg9UYswuTfam82AaRlHULJMsvz-9fiiaiSpKV9NnfMKqB7rSHdXHtnuTaGytEMgCUTH_T_cQp2etIGIK6iOLUPri_gbyd2gNpcir9S5OmbdXZAO2oyxRydbA9rHj6ZrQrXEa4GF8RAQpamNJHVdLw85PsVRKJ2-izb_hI_4LGTaS23yRIAnvxzSRLY99C6d4qdu-wHU1rMO6_5guol91QBIDBNuztj"/>
-<span className="absolute -top-2 -right-2 bg-text-muted text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full">1</span>
-</div>
-<div className="flex-1">
-<p className="text-text-main dark:text-white text-sm font-bold">Platycerium Grande</p>
-<p className="text-text-muted text-xs">Extra Large</p>
-</div>
-<p className="text-text-main dark:text-white text-sm font-bold">$120.00</p>
-</div>
-</div>
-<hr className="border-border-light dark:border-white/10 mb-6"/>
-{/* Promo Code */}
-<div className="flex gap-2 mb-6">
-<input className="form-input flex-1 rounded-lg border-border-light bg-white dark:bg-background-dark dark:text-white dark:border-white/20 h-12 px-4 text-sm focus:ring-primary/20" placeholder="Gift card or discount code" type="text"/>
-<button className="bg-primary/20 text-text-main dark:text-white px-4 rounded-lg font-bold text-sm hover:bg-primary/30 transition-colors">Apply</button>
-</div>
-<hr className="border-border-light dark:border-white/10 mb-6"/>
-{/* Pricing Details */}
-<div className="space-y-3">
-<div className="flex justify-between text-sm">
-<span className="text-text-muted">Subtotal</span>
-<span className="text-text-main dark:text-white font-medium">$165.00</span>
-</div>
-<div className="flex justify-between text-sm">
-<span className="text-text-muted">Shipping</span>
-<span className="text-text-muted italic">Calculated at next step</span>
-</div>
-<div className="flex justify-between text-sm">
-<span className="text-text-muted">Taxes</span>
-<span className="text-text-main dark:text-white font-medium">$13.20</span>
-</div>
-<hr className="border-border-light dark:border-white/10 my-2"/>
-<div className="flex justify-between items-center pt-2">
-<span className="text-text-main dark:text-white text-lg font-bold">Total</span>
-<div className="text-right">
-<span className="text-text-muted text-xs mr-2">USD</span>
-<span className="text-text-main dark:text-white text-2xl font-black">$178.20</span>
-</div>
-</div>
-</div>
-{/* Trust Badges */}
-<div className="mt-8 flex flex-col items-center gap-3">
-<div className="flex items-center gap-2 text-text-muted text-xs">
-<span className="material-symbols-outlined text-sm">lock</span>
-                                    Secure SSL Encrypted Checkout
-                                </div>
-<div className="flex items-center gap-4 opacity-50 grayscale hover:grayscale-0 transition-all cursor-default">
-<span className="material-symbols-outlined">payments</span>
-<span className="material-symbols-outlined">credit_card</span>
-<span className="material-symbols-outlined">account_balance</span>
-</div>
-</div>
-</div>
-</aside>
-</div>
-</div>
 
         </>
     );
