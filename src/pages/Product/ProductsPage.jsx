@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import axios from 'axios';
-const { VITE_API_URL , VITE_API_PATH } = import.meta.env;
+const { VITE_API_URL, VITE_API_PATH } = import.meta.env;
 
 import ProductCard from '../../components/elements/ProductCard';
+import { addToCartWithStockCheck } from '../../api/cart';
 
 
 
@@ -58,6 +59,10 @@ export default function ProductsPage() {
     ? products.filter((product) => product.category === activeCategory)
     : products;
 
+  const handleAddToCart = (productId, qty = 1, stock = null, unit = '') => {
+    addToCartWithStockCheck({ productId, qty, stock: stock ?? undefined, unit });
+  };
+
   return (
 
     <div className="px-8">  
@@ -95,12 +100,11 @@ export default function ProductsPage() {
           <span className="">
             此分類 {filteredProducts.length} 項商品
           </span>
-          <div className="collection-products__sort">
+          <div>
             <span>排序方式（功能還沒做）：</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="collection-products__select"
             >
               <option value="popularity">熱門度</option>
               <option value="price-low">價格：低到高</option>
@@ -118,7 +122,11 @@ export default function ProductsPage() {
                                                 md:grid-cols-3 ">
             {filteredProducts.map((product) => (
                 <Link key={product.id} to={`/product/${product.id}`} className="link-card">
-                  <ProductCard {...product} page="products" />
+                  <ProductCard
+                    {...product}
+                    usedOnPage="products"
+                    onAddToCart={handleAddToCart}
+                  />
                 </Link>
             ))}
           </div>

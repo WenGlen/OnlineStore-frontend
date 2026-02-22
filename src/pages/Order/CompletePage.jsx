@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import OrderSummary from '../../components/sections/Order/OrderSummary';
+import PageTitle from '../../components/elements/PageTitle';
 
 const FREE_SHIPPING_THRESHOLD = 2000;
 const DEFAULT_FREIGHT = 120;
@@ -41,9 +42,7 @@ export default function CompletePage({ cartItems = [], orderConfirmData }) {
 
     return (
         <section className="w-full p-4 md:p-8 max-w-screen-md space-y-6 md:space-y-8">
-            <div className="w-full border-b border-border-50 hidden md:block">
-                <h2 className="">完成訂單</h2>
-            </div>
+            <PageTitle title="完成訂單" mobile="hidden"/>
 
             {/* 完成說明 */}
             <div className="w-full border-b border-border-50 py-6 md:py-8 space-y-2">
@@ -111,14 +110,14 @@ export default function CompletePage({ cartItems = [], orderConfirmData }) {
             </div>
 
             {/* 操作按鈕 */}
-            <div className="w-full flex flex-col sm:flex-row gap-3 justify-end">
-                <Link to="/user/orders">
-                    <button className="btn-secondary">
+            <div className="w-full flex gap-4 justify-end">
+                <Link to="/user/orders" className="w-full md:w-auto">
+                    <button className="btn-secondary w-full">
                     查看我的訂單
                     </button>
                 </Link>
-                <Link to="/products">
-                    <button className="btn-primary">
+                <Link to="/products" className="w-full md:w-auto">
+                    <button className="btn-primary w-full">
                     繼續選購
                     </button>
                 </Link>

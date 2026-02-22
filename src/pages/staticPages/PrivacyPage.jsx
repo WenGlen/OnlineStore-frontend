@@ -1,9 +1,11 @@
+import PageTitle from '../../components/elements/PageTitle';
+
 export default function PrivacyPage() {     
     return (
 
 
-        <div className="w-full max-w-screen-md mx-auto bg-panel-25 rounded-md p-8 my-12">
-            <h1 className="text-2xl">隱私權政策</h1>
+        <div className="w-full max-w-screen-md mx-auto bg-panel-25 rounded-md p-8 my-24">
+            <PageTitle title="隱私權政策"/>
 
             <p className="mb-6">
                 非常歡迎您光臨本網站，為了讓您能夠安心的使用本網站的各項服務與資訊，特此向您說明本網站的隱私權保護政策，以保障您的權益，請您詳閱下列內容：

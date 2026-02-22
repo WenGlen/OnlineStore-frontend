@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { inProgressOrders, orderHistory } from '../../data/userData';
 import OrderItem from '../../components/elements/OrderItem';
+import PageTitle from '../../components/elements/PageTitle';
 
 export default function OrdersPage() {
   const [expandedOrderId, setExpandedOrderId] = useState(null);
@@ -11,9 +12,7 @@ export default function OrdersPage() {
 
   return (
     <section className="w-full p-4 md:p-8 max-w-screen-md space-y-8">
-      <div className="w-full border-b border-border-50">
-        <h1 className="text-2xl">訂單</h1>
-      </div>
+      <PageTitle title="訂單"/>
 
       {inProgressOrders.length > 0 && (
         <div className="space-y-4">

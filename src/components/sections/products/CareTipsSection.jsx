@@ -8,13 +8,15 @@ import { careTips, defaultCareTipsTitle } from '../../../data/careTips';
  */
 export default function CareTipsSection({ title = defaultCareTipsTitle, className = '' }) {
   return (
-    <div className={`px-12 py-6 bg-panel-50 rounded-xl ${className}`.trim()}>
+    <div className={`px-12 py-6 bg-panel-50 md:rounded-xl ${className}`.trim()}>
       <h3 className="text-xl font-bold mb-8">{title}</h3>
       <ul className="space-y-6">
         {careTips.map((tip) => (
           <li key={tip.id} className="flex gap-4">
-            <span className="material-symbols-outlined text-primary">{tip.icon}</span>
-            <div>
+            <div className="w-16 h-16 bg-placeholder rounded-md flex-row-center-center">
+              <span className="text-xs">{tip.icon}</span>
+            </div>
+            <div className="flex-1">
               <strong className="block">{tip.title}</strong>
               <span className="text-sm">{tip.description}</span>
             </div>

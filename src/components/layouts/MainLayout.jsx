@@ -1,5 +1,7 @@
-import { Outlet, Link , NavLink , useParams , useLocation } from "react-router-dom";
+import { Outlet, Link , NavLink , useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import Toast from '../elements/Toast';
+import { getCart, EVENT_CART_UPDATED, EVENT_SHOW_TOAST } from '../../api/cart';
 
 import userIcon from '../../img/user.png';
 import cartIcon from '../../img/cart.png';
@@ -10,14 +12,47 @@ export default function MainLayout({
     footerNavItems ,
 
 }) {
+    {/* 換頁時回到頂部 */}
     const location = useLocation();
 
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [location.pathname]);
 
-    const CartCount = 11;//TODO: get from backend
+
+    {/* 吐司彈窗：有值時才顯示，結束後由 Toast 的 onClose 清空 */}
+    const [toastMessage, setToastMessage] = useState(null);
+
+    const [cartCount, setCartCount] = useState(0);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+    async function fetchCart() {
+        try {
+            const res = await getCart();
+            if (res.data?.success && Array.isArray(res.data.data?.carts)) {
+                const total = res.data.data.carts.reduce((sum, item) => sum + (item.qty || 0), 0);
+                setCartCount(total);
+            } else {
+                setCartCount(0);
+            }
+        } catch {
+            setCartCount(0);
+        }
+    }
+
+    useEffect(() => { fetchCart(); }, []);
+
+    useEffect(() => {
+        const onCartUpdated = () => fetchCart();
+        window.addEventListener(EVENT_CART_UPDATED, onCartUpdated);
+        return () => window.removeEventListener(EVENT_CART_UPDATED, onCartUpdated);
+    }, []);
+
+    useEffect(() => {
+        const onShowToast = (e) => setToastMessage(e.detail?.message ?? '');
+        window.addEventListener(EVENT_SHOW_TOAST, onShowToast);
+        return () => window.removeEventListener(EVENT_SHOW_TOAST, onShowToast);
+    }, []);
 
     // 從手機版切回桌機版時關閉手機選單（Tailwind md = 768px）
     useEffect(() => {
@@ -28,28 +63,25 @@ export default function MainLayout({
         media.addEventListener('change', handler);
         return () => media.removeEventListener('change', handler);
     }, []);
+
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     
     return (
         <div className="min-h-screen flex flex-col w-full" >
-
-            <header className="header" >
+            <header className="header fixed top-0 left-0 right-0 z-50 w-full" >
                 {/* 桌面版選單 */}
-                <div className="fixed top-0 left-0 z-50
-                                                w-full h-16 backdrop-blur-sm bg-background-50 border-b border-border-25 
-                                                hidden
-                                                md:block ">
-                    <div className="w-full max-w-screen-xl mx-auto flex-row-between-center gap-8 py-2 px-8">
-                        <div className="logo">
-                            <Link to="/" className="" >
-                                <div className="w-32 h-10 bg-placeholder rounded-md flex-row-center-center">
-                                綠蕨飾（logo）
-                                </div>
-                            </Link>
-                        </div>
+                <div className="relative w-full h-16 backdrop-blur-sm bg-background-50 border-b border-border-25 
+                                hidden
+                                md:block ">
+                    <div className="w-full max-w-screen-xl mx-auto flex-row-between-center gap-4 py-2 px-8">
+                        <Link to="/" className="" >
+                            <div className="w-28 h-10 bg-placeholder rounded-md flex-row-center-center">
+                            綠蕨飾 logo
+                            </div>
+                        </Link>
 
-                        <div className="nav 
-                                        flex-row-center gap-8 
+                        <div className="nav w-full max-w-[600px] md:min-w-[480px]
+                                        flex justify-evenly
                                         text-lg" >
                         {headerNavItems.map((item) => (
                             <NavLink key={item.path} to={item.path}  
@@ -59,14 +91,14 @@ export default function MainLayout({
                         ))}
                         </div>
 
-                        <div /*header-actions*/ className=" flex-row-center-center gap-8 py-2 ">
+                        <div /*header-actions*/ className=" flex-row-center-center gap-4 py-2 flex-shrink-0">
                             <Link to="/order" className="btn-icon relative">
                                 <img src={cartIcon} alt="cart" className="w-8 h-8" />
-                                {CartCount > 0 && (
+                                {cartCount > 0 && (
                                     <div className="absolute -top-3 -right-3
                                                     w-6 h-6 bg-primary rounded-full
                                                     text-xs text-invert flex items-center justify-center ">
-                                        {CartCount}
+                                        {cartCount}
                                     </div>
                                 )}
                             </Link>
@@ -75,20 +107,31 @@ export default function MainLayout({
                             </Link>
                         </div>
                     </div>
+
+                    {/* 吐司彈窗：由各頁透過 showToast 事件顯示 */}
+                    {toastMessage != null && (
+                        <div className="absolute -bottom-[120px] right-4 z-50">
+                            <Toast
+                                message={toastMessage}
+                                onClose={() => setToastMessage(null)}
+                            />
+                        </div>
+                    )}
+
                 </div>
-                <div /*排版站位元素*/ className="h-16 w-full md:block hidden" />
                 
                 {/* 手機版選單 */}
                 <div className="fixed top-4 right-4 flex gap-6 z-50
                                                 block
                                                 md:hidden">
+
                     <Link to="/order" className="btn-icon relative">
                         <img src={cartIcon} alt="cart" className="w-8 h-8" />
-                        {CartCount > 0 && (
+                        {cartCount > 0 && (
                         <span className="absolute -top-2 -right-2
                                         w-6 h-6 bg-primary rounded-full
                                         text-sm text-invert flex items-center justify-center ">
-                            {CartCount}
+                            {cartCount}
                         </span>
                         )}
                     </Link>
@@ -100,6 +143,15 @@ export default function MainLayout({
                         </div>
                     </button>
 
+                    {toastMessage != null && (
+                        <div className="fixed top-0 left-4 z-50">
+                            <Toast
+                                message={toastMessage}
+                                onClose={() => setToastMessage(null)}
+                            />
+                        </div>
+                    )}
+
                 </div>
 
                 <div className={`fixed top-0 right-0 z-40 w-full h-full 
@@ -108,7 +160,7 @@ export default function MainLayout({
                                 ${isMobileMenuOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'}`}>
                         <div className="w-full h-24"/>
                         <div className="w-full px-8 flex-col-center-end gap-8">
-                            <button className="logo" onClick={() => setIsMobileMenuOpen(false)}>
+                            <button onClick={() => setIsMobileMenuOpen(false)}>
                                 <Link to="/" className="" >
                                     <div className="w-64 h-20 bg-placeholder rounded-md flex-row-center-center">
                                         綠蕨飾（logo）
@@ -122,21 +174,27 @@ export default function MainLayout({
                                         {item.label}
                                     </NavLink>
                                 ))}
+                                <NavLink to="/user/orders" 
+                                    className={`nav-item text-lg text-NotoSerifTC`}>
+                                    我的訂單
+                                </NavLink>
                             </button>
                         </div>
                 </div>
+                
+
             </header>
+
             
-            {/* 主要內容 */}
-            <div className="flex-1 w-full min-h-0">
+            {/* 主要內容（md:pt-16 是避免被固定 header 遮住*/}
+            <div className="flex-1 w-full min-h-0 md:pt-16">
                 <main className="mx-auto w-full" >
                     <Outlet />
                 </main>
             </div>
 
 
-            <footer className="footer 
-                                w-full backdrop-blur-sm bg-background-25
+            <footer className="w-full backdrop-blur-sm bg-background-25
                                 border-t border-border-50">
                 <div className="w-full max-w-screen-xl mx-auto 
                                     flex-col-center-center gap-4

@@ -22,6 +22,7 @@ import OrdersPage from '../pages/User/OrdersPage';
 import PrivacyPage from '../pages/staticPages/PrivacyPage';
 import FAQPage from '../pages/staticPages/FAQPage';
 import NotFoundPage from '../pages/staticPages/NotFoundPage';
+import APITestPage from '../pages/staticPages/APITestPage';
 
 // 頁面標題集中管理（顯示為：title | 綠蕨飾）
 
@@ -45,10 +46,14 @@ const Pages = {
     order:[
         { path: "order", element: <OrderLayout />, title: '購物車' },
     ],
-    // 使用者頁面有巢狀結構，直接寫在下面
+    // user使用者頁面有巢狀結構，直接寫在下面
     notFound:[
         { path: "*", element: <NotFoundPage />, title: '頁面不存在' },
-    ]
+    ],
+    APITest:[
+        { path: "api-test", element: <APITestPage />, title: 'API測試' },
+    ],
+
 };
 
 

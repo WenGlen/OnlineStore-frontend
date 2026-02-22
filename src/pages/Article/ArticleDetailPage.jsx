@@ -99,7 +99,7 @@ export default function ArticleDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {getRelatedProducts(3).map((product) => (
                 <Link key={product.id} to={`/product/${product.id}`} className="link-card">
-                  <ProductCard {...product} page="products" />
+                  <ProductCard {...product} usedOnPage="products" />
                 </Link>
               ))}
             </div>

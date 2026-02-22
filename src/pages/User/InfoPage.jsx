@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
-import FormInput from '../../components/elements/FormInput';
+import FormInput from '../../components/elements/FormInput';  
+import PageTitle from '../../components/elements/PageTitle';
 
 const SECTION_ORDERER = 'orderer';
 const SECTION_PAYMENT = 'payment';
@@ -117,9 +118,7 @@ export default function InfoPage() {
 
   return (
     <section className="p-4 md:p-8 w-[300px] md:w-full md:max-w-screen-md">
-      <div className="w-full border-b border-border-50">
-        <h1 className="text-2xl">個人資訊</h1>
-      </div>
+      <PageTitle title="個人資訊"/>
 
       {/* 訂購人資訊 */}
       <div className="w-full border-b border-border-50 py-12 space-y-4">

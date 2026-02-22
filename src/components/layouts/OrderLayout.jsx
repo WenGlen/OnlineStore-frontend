@@ -1,36 +1,76 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import CartPage from '../../pages/Order/CartPage';
 import ConfirmPage from '../../pages/Order/ConfirmPage';
 import PaymentPage from '../../pages/Order/PaymentPage';
 import CompletePage from '../../pages/Order/CompletePage';
+import { getCart, updateCartItem, removeCartItem, notifyCartUpdated, notifyToast } from '../../api/cart';
 
+/** 將 API 購物車格式轉成 CartPage / CartItem 使用的格式 */
+function mapCartsToItems(apiData) {
+    const carts = apiData?.data?.carts;
+    if (!Array.isArray(carts)) return [];
+    return carts.map((c) => ({
+        id: c.id,
+        product_id: c.product_id,
+        name: c.product?.title ?? '',
+        image: c.product?.imageUrl ?? null,
+        price: c.product?.price ?? 0,
+        quantity: c.qty ?? 0,
+        stock: c.product?.stock ?? 999,
+        unit: c.product?.unit ?? '',
+        category: c.product?.category ?? '',
+    }));
+}
 
 export default function OrderLayout() {
     const [step, setStep] = useState(0);
     const [orderConfirmData, setOrderConfirmData] = useState(null);
-    const [cartItems, setCartItems] = useState([
-        {
-            id: 1,
-            image: 'https://i.meee.com.tw/cquTDFC.png',
-            name: '白鹿角蕨(已上板)｜成熟展示株',
-            price: 750,
-            quantity: 1,
-        },
-        {
-            id: 2,
-            image: 'https://i.meee.com.tw/OYadPwo.png',
-            name: '精緻實木掛板｜中型尺寸',
-            price: 200,
-            quantity: 2,
-        },
-        {
-            id: 3,
-            image: 'https://i.meee.com.tw/HDIDrWY.png',
-            name: '上板用尼龍線',
-            price: 80,
-            quantity: 3,
-        },
-    ]);
+    const [cartItems, setCartItems] = useState([]);
+    const [cartLoading, setCartLoading] = useState(true);
+
+    const fetchCart = useCallback(async () => {
+        try {
+            const res = await getCart();
+            setCartItems(mapCartsToItems(res.data));
+        } catch {
+            setCartItems([]);
+        } finally {
+            setCartLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCart();
+    }, [fetchCart]);
+
+    const updateQuantity = useCallback(async (cartItemId, delta) => {
+        const item = cartItems.find((i) => i.id === cartItemId);
+        if (!item) return;
+        const maxQty = item.stock != null ? Number(item.stock) : 999;
+        const newQty = Math.min(maxQty, Math.max(1, item.quantity + delta));
+        if (newQty === item.quantity) return;
+        try {
+            await updateCartItem(cartItemId, item.product_id, newQty);
+            notifyCartUpdated();
+            const res = await getCart();
+            setCartItems(mapCartsToItems(res.data));
+        } catch (err) {
+            const msg = err.response?.data?.message || '更新數量失敗';
+            notifyToast(msg);
+        }
+    }, [cartItems]);
+
+    const removeItem = useCallback(async (cartItemId) => {
+        try {
+            await removeCartItem(cartItemId);
+            notifyCartUpdated();
+            const res = await getCart();
+            setCartItems(mapCartsToItems(res.data));
+        } catch (err) {
+            const msg = err.response?.data?.message || '刪除失敗';
+            notifyToast(msg);
+        }
+    }, []);
 
     const stepsName = [
         '查看購物車',
@@ -60,7 +100,15 @@ export default function OrderLayout() {
             </div>
 
             {
-                step === 0 && <CartPage cartItems={cartItems} setCartItems={setCartItems} setStep={setStep} />
+                step === 0 && (
+                    <CartPage
+                        cartItems={cartItems}
+                        setStep={setStep}
+                        updateQuantity={updateQuantity}
+                        removeItem={removeItem}
+                        cartLoading={cartLoading}
+                    />
+                )
             }
             {
                 step === 1 && (

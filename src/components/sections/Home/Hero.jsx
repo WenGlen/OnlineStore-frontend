@@ -24,7 +24,7 @@ export default function Hero() {
                         </h1>
                         <div className="mobile:absolute mobile:bottom-4 mobile:left-1/2 mobile:-translate-x-1/2
                                         flex flex-col gap-12">
-                            <p className="text-NotoSansTC mobile:w-[50vw] ">
+                            <p className="mobile:w-[50vw] ">
                             <span className="hidden md:block">讓牆面成為你的垂直花園，<br/></span>
                             嚴選每一株姿態，讓手工上板的鹿角蕨，<br className="hidden md:block"/>
                             展現不需張揚的高雅品味。

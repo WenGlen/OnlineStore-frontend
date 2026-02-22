@@ -1,15 +1,8 @@
-/**
- * 數量控制器
- * @param {number} value - 目前數量
- * @param {number} [min=1] - 最少量
- * @param {number} [max] - 最大數量（可選，未來由 API 庫存帶入）
- * @param {(newValue: number) => void} onChange - 數量變更時呼叫，傳入新值
- * @param {() => void} [onRequestRemove] - 可選。當在最小值時按下「−」時呼叫（例如購物車要彈出刪除確認）
- */
 export default function QuantityController({
   value,
   min = 1,
   max,
+  unit,
   onChange,
   onRequestRemove,
   className = '',
@@ -54,8 +47,12 @@ export default function QuantityController({
           +
         </button>
       </div>
-      <div  className="absolute -bottom-6 left-0 w-full">
-        <p className="text-xs text-error text-center">{atMax && max != null ? "已達數量上限" : "\u00A0"}</p>
+      <div  className="absolute -bottom-6 left-0 w-full text-xs text-center">
+        {atMax && max != null ? (
+          <p className="text-error ">已達庫存上限</p> 
+        ):(
+          <p className="text-muted"> 庫存數 {max} {unit} </p>
+        )}
       </div>
     </div>
   );

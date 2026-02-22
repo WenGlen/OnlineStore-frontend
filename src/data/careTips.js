@@ -7,13 +7,13 @@
 export const careTips = [
   {
     id: 'light',
-    icon: 'light_mode',
+    icon: 'light',
     title: '明亮散射光',
     description: '避免正午直射陽光灼傷葉片，北向或東向窗戶最理想。'
   },
   {
     id: 'water',
-    icon: 'water_drop',
+    icon: 'water',
     title: '浸透再晾乾法',
     description: '整塊掛板浸水 15～20 分鐘，完全乾透後再進行下一次澆水。'
   },

@@ -2,10 +2,11 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import React, { useEffect, useState } from 'react';
 
-const { VITE_API_URL , VITE_API_PATH } = import.meta.env;
+const { VITE_API_URL, VITE_API_PATH } = import.meta.env;
 
 import CareTipsSection from '../../components/sections/products/CareTipsSection';
 import QuantityController from '../../components/elements/QuantityController';
+import { addToCartWithStockCheck } from '../../api/cart';
 
 
 
@@ -68,6 +69,22 @@ export default function ProductDetailPage() {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(1);
+  const [cartLoading, setCartLoading] = useState(false);
+
+  async function handleAddToCart() {
+    if (!product?.id) return;
+    setCartLoading(true);
+    try {
+      await addToCartWithStockCheck({
+        productId: product.id,
+        qty: quantity,
+        stock: product.stock ?? undefined,
+        unit: product.unit ?? '',
+      });
+    } finally {
+      setCartLoading(false);
+    }
+  }
 
 
 
@@ -135,21 +152,30 @@ export default function ProductDetailPage() {
               <QuantityController
                 value={quantity}
                 min={1}
-                max={Q}
+                max={product.stock}
+                unit={product.unit}
                 onChange={setQuantity}
               />
             )}
-            <button className="btn bg-secondary text-white">加入購物車</button>
+            <button
+              type="button"
+              className="btn-primary"
+              disabled={cartLoading || !product?.id}
+              onClick={handleAddToCart}
+            >
+              {cartLoading ? '加入中…' : '加入購物車'}
+            </button>
           </div>
         </div>
       </section>
 
       <section>
         <div className="max-w-screen-md mx-auto flex flex-col gap-8 py-12">
-          <div className="">
+          <div className="p-8">
+          <p className="text-sm text-muted">(未來會升級內容，有簡單的文字段落，但這邊先不處理)</p>
           {product.description}
           </div>
-          <CareTipsSection title="Care Tips" care={product.care} />
+          <CareTipsSection title="養護重點" care={product.care} />
 
         </div>
 

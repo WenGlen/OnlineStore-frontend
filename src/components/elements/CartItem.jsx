@@ -1,9 +1,15 @@
 import { useState } from 'react';
 import QuantityController from './QuantityController';
+import deleteIcon from '../../img/delete.png';
+
 
 export default function CartItem({ item, updateQuantity, removeItem }) {
   const price = Number(item?.price) ?? 0;
   const quantity = Number(item?.quantity) ?? 0;
+  const stock = Number(item?.stock) ?? 999;
+  const isBoutique = item?.category === '精品';
+  const maxQuantity = Math.max(1, stock);
+  const unit = item?.unit;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handleQuantityChange = (newValue) => {
@@ -14,12 +20,11 @@ export default function CartItem({ item, updateQuantity, removeItem }) {
     removeItem(item?.id);
     setShowDeleteConfirm(false);
   };
-  const Q = 5;
 
   return (
     <>
       <div
-        className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr_1fr] gap-3 md:gap-4 py-8 md:py-4 border-b border-border last:border-b-0 items-center"
+        className="grid grid-cols-1 md:grid-cols-[4fr_2fr_2fr_2fr_1fr] gap-2 md:gap-4 py-8 md:py-4 border-b border-border last:border-b-0 items-center"
       >
         <div className="flex items-center gap-4 min-w-0 md:col-span-1">
           <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg overflow-hidden flex-shrink-0 bg-panel-50 flex items-center justify-center">
@@ -42,26 +47,42 @@ export default function CartItem({ item, updateQuantity, removeItem }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between md:contents px-8">
+        <div className="flex items-center justify-between md:contents px-4">
           <div className="flex items-center justify-between md:contents">
             <span className="text-sm text-muted md:text-center md:justify-self-center">${price}</span>
           </div>
           <span className="text-sm text-muted block md:hidden">×</span>
 
-          <QuantityController
-            value={quantity}
-            min={1}
-            max={Q}
-            onChange={handleQuantityChange}
-            onRequestRemove={() => setShowDeleteConfirm(true)}
-            className="md:justify-self-center"
-          />
+          {isBoutique ? (
+            <span className="text-sm font-semibold w-[120px] text-center">1</span>
+          ) : (
+            <QuantityController
+              value={quantity}
+              min={1}
+              max={maxQuantity}
+              unit={unit}
+              onChange={handleQuantityChange}
+              onRequestRemove={() => setShowDeleteConfirm(true)}
+              className="md:justify-self-center"
+            />
+          )}
 
           <span className="text-sm text-muted block md:hidden">=</span>
           <div className="flex items-center justify-between md:contents">
             <span className="text-base font-bold text-default md:text-center md:justify-self-center">
               ${price * quantity}
             </span>
+          </div>
+
+          <div className="text-center">
+            <button
+              type="button"
+              className="btn-icon"
+              onClick={() => setShowDeleteConfirm(true)}
+              aria-label="刪除此商品"
+            >
+              <img src={deleteIcon} alt="delete" className="w-6 h-6" />
+            </button>
           </div>
         </div>
       </div>
@@ -85,18 +106,19 @@ export default function CartItem({ item, updateQuantity, removeItem }) {
             <div className="flex justify-end gap-2">
               <button
                 type="button"
-                className="btn btn-sub"
-                onClick={() => setShowDeleteConfirm(false)}
-              >
-                取消
-              </button>
-              <button
-                type="button"
-                className="btn bg-secondary text-white"
+                className="btn-secondary"
                 onClick={handleConfirmRemove}
               >
                 確認刪除
               </button>
+              <button
+                type="button"
+                className="btn-panel"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                取消
+              </button>
+
             </div>
           </div>
         </div>

@@ -6,9 +6,10 @@ import Hero from '../components/sections/Home/Hero';
 import Features from '../components/sections/Home/Features';
 
 import ProductCard from '../components/elements/ProductCard';
+import { addToCartWithStockCheck } from '../api/cart';
 
 import axios from 'axios';
-const { VITE_API_URL , VITE_API_PATH } = import.meta.env;
+const { VITE_API_URL, VITE_API_PATH } = import.meta.env;
 
 
 
@@ -41,6 +42,10 @@ export default function HomePage() {
       .slice(0, 4);
   }, [products]);
 
+  const handleAddToCart = (productId, qty = 1, stock = null, unit = '') => {
+    addToCartWithStockCheck({ productId, qty, stock: stock ?? undefined, unit });
+  };
+
 
 
 
@@ -69,7 +74,12 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
             {topFourProducts.map((product) => (
-              <ProductCard key={product.id} {...product} page="home" />
+              <ProductCard
+                key={product.id}
+                {...product}
+                usedOnPage="home"
+                onAddToCart={handleAddToCart}
+              />
             ))}
           </div>
         </section>

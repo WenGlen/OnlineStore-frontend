@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import OrderSummary from '../../components/sections/Order/OrderSummary';
 import FormInput from '../../components/elements/FormInput';
+import PageTitle from '../../components/elements/PageTitle';
 
 export default function ConfirmPage({
     cartItems,
@@ -158,9 +159,7 @@ export default function ConfirmPage({
         <div className="w-full max-w-screen-xl mx-auto flex flex-col md:flex-row gap-0 md:gap-8" /* container */>
 
         <section className="w-full p-4 md:p-8 max-w-screen-md space-y-8">
-            <div className="w-full border-b border-border-50 hidden md:block">
-                <h2 className="">訂單資訊</h2>
-            </div>
+            <PageTitle title="訂單資訊" mobile="hidden"/>
 
             <form className="flex flex-col" onSubmit={handleSubmit}>
                 {/* 訂購資訊 */}
@@ -373,7 +372,7 @@ export default function ConfirmPage({
                     )}
                     <button
                         type="submit"
-                        className="btn-primary"
+                        className="btn-primary w-full md:w-auto"
                     >
                         送出訂單
                     </button>

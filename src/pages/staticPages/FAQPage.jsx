@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { faqList } from '../../data/faqData';
+import PageTitle from '../../components/elements/PageTitle';
 
 export default function FAQPage() {
   const [expandedId, setExpandedId] = useState(null);
@@ -16,9 +17,7 @@ export default function FAQPage() {
 
   return (
     <section className="w-full p-4 max-w-screen-md space-y-8">
-      <div className="w-full border-b border-border-50">
-        <h1 className="text-2xl">常見問題</h1>
-      </div>
+      <PageTitle title="常見問題"/>
 
       {/* 一條一條可展開的問答 */}
         <ul className="flex flex-col">

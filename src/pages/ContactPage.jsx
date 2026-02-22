@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import FormInput from '../components/elements/FormInput';
 import TextCard from '../components/elements/TextCard';
+import PageTitle from '../components/elements/PageTitle';
 
 // Google Maps Embed（iframe 模式，免 API key），可替換成自己的「分享 > 嵌入地圖」網址
 const MAP_EMBED_SRC =
@@ -49,9 +50,7 @@ export default function ContactPage() {
 
   return (
     <section className="p-4 md:p-8 w-[300px] md:w-full md:max-w-screen-md">
-      <div className="w-full border-b border-border-50">
-        <h1 className="text-2xl">聯絡我們</h1>
-      </div>
+      <PageTitle title="聯絡我們"/>
       <p className="pt-4 text-default">
         如果您有任何問題或建議，請隨時聯絡我們。
       </p>
